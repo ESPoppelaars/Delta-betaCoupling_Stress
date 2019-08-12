@@ -1,1 +1,2 @@
-# Delta-betaCoupling_Stress
+# Delta-beta coupling - stress
+
