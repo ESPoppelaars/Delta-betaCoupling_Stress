@@ -1,5 +1,6 @@
 # Custom function to check the magnitude of Cohen's d values
 cohen.d.magnitude <- function(x) {
+  x <- abs(x) # Remove minus signs
   if (x < 0.2) {
     y <- "negligible"
   } else if (x < 0.5) {
