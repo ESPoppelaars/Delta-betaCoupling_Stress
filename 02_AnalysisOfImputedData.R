@@ -2,6 +2,85 @@
 # All packages up to date as of 30-09-2019.
 
 
+# Normality tests (preregistered) ---------------------------------------------------------
+# Load packages
+library(dplyr) # Data manipulation
+library(magrittr) # Piping
+library(xlsx) # Exporting to Excel
+library(mice) # For multiple imputed data
+source('p.value.sig.R') # Custom function to check the significance of p.values
+
+# Load data
+load("SET_CFC.outl.del.imp.RData")
+# Select data
+data <- mice::complete(SET_CFC.outl.del.imp, action = "long") # Create long dataset
+data <- select(data, c(".imp", "RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z", # Select variables
+                       "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
+                       "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
+                       "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
+                       "LSAS", "anx.react",
+                       "PEP.2", "pep.react",
+                       "RSA.2", "rsa.react",
+                       "RR.2", "rr.react",
+                       "Cortisol.1.log", "cort.react"))
+colnames(data)[1] <- "imp" # Remove the dot from the imp column for easier handling
+
+# Initialize variables
+m <- SET_CFC.outl.del.imp$m # Number of imputed datasets
+normEst <- matrix(NA, nrow = I(ncol(data)-1), ncol = m) # Matrix to put the Shapiro-Wilk statistic per imputed dataset
+normP <- matrix(NA, nrow = I(ncol(data)-1), ncol = m) # Matrix to put the p-values per imputed dataset
+n.obs <- matrix(NA, nrow = I(ncol(data)-1), ncol = m) # Matrix to put the number of observations
+varEst <- matrix(NA, nrow = I(ncol(data)-1), ncol = m) # Matrix to put the variance of the variables per imputed dataset
+normAv <- matrix(NA, nrow = I(ncol(data)-1), ncol = 1) # Matrix to put the pooled statistic estimates
+normPAv <- matrix(NA, nrow = I(ncol(data)-1), ncol = 1) # Matrix to put the pooled p-value estimates
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed datasets
+  subdata <- data %>% filter(imp == j) %>% select(-imp) %>% as.matrix() # Select imputed dataset
+  for (i in 1:ncol(subdata)) { # For all variables in the data
+    SW <- shapiro.test(subdata[, i]) # Calculate normality
+    normEst[i, j] <- SW[["statistic"]] # Extract Shapiro-Wilk statistic
+    normP[i, j] <- SW[["p.value"]] # Extract p-value
+    n.obs[i, j] <- length(subdata[, i]) # Calculate sample size
+    varEst[i, j] <- var(subdata[, i]) / n.obs[i, j] # The standard error of the estimate (necessary for pooling)
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:I(ncol(data)-1)) { # For every variable
+  normAv[i, 1] <- pool.scalar(normEst[i, ], varEst[i, ], n = n.obs[i,], k = 1)[["qbar"]] %>% unlist() %>% round(3) # For statistic
+  normPAv[i, 1] <- pool.scalar(normP[i, ], varEst[i, ], n = n.obs[i,], k = 1)[["qbar"]] %>% unlist() %>% round(3) # For p-value
+}
+
+# Add estimates to dataframe
+normTest <- colnames(data[, -1]) %>% as.data.frame(stringsAsFactors = FALSE) # Initialize dataframe with variable names
+colnames(normTest) <- "variable" # Set column-name appropriately
+normTest[, "Shapiro-Wilk.stat"] <- normAv %>% as.data.frame() # Add pooled statistic estimates
+normTest[, "p.value"] <- normPAv %>% as.data.frame() # Add pooled p-value estimates
+
+# Do FDR-correction on p-values
+normTest[, "p.adj"] <- p.adjust(normTest[, "p.value"], method = "bonferroni", n = length(normTest[, "p.value"])) # Do fdr-correction
+normTest$p.adj.sig <- sapply(normTest$p.adj, function(x) p.value.sig(x)) # Add column with corrected significance interpretation
+normTest$p.value.sig <- sapply(normTest$p.value, function(x) p.value.sig(x)) # Add column with uncorrected significance interpretation
+
+# Save results
+write.xlsx(normTest, "normTest.SET_CFC.outl.del.imp.xlsx")
+
+## Remove temporary variables
+remove(normAv)
+remove(varEst)
+remove(normEst)
+remove(normP)
+remove(normPAv)
+remove(n.obs)
+remove(normTest)
+remove(i)
+remove(j)
+remove(m)
+remove(data)
+remove(subdata)
+remove(SW)
+remove(p.value.sig)
+
+
 # Exporting descriptives (preregistered) --------------------------------------------------
 
 # Packages
@@ -2895,8 +2974,8 @@ data_obtained_long <- select(data_obtained_long, c(".imp", "react_Frontal_Avg_dP
                                                    "anx.react"))
 colnames(data_obtained_long)[1] <- "imp" # Reset imp column name without dot
 # Select CFC reactivity data from previous study
-load("LSA_HSA.RData") # Load prior data
-data_theory <- select(LSA_HSA, c("react_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_AAC_R",
+load("LSA_HSA_brief.RData") # Load prior data
+data_theory <- select(LSA_HSA_brief, c("react_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_AAC_R",
                                  "anx.react")) %>% as.matrix()
 BF <- list() # Initialize results list for uninformed priors
 # Initialize variables for pooling informed priors
@@ -3105,7 +3184,7 @@ remove(data_obtained)
 remove(data_obtained_long)
 remove(BF_test)
 remove(BF)
-remove(LSA_HSA)
+remove(LSA_HSA_brief)
 remove(t_est)
 remove(t.val)
 remove(BF_t)
@@ -3718,6 +3797,323 @@ remove(cohen.d.magnitude)
 remove(femaleData)
 remove(maleData)
 
+
+
+# CFC correlations per LSAS group (exploratory) ------------------------------------------------------------
+# Packages
+library(mice) # Multiple imputation functions
+library(dplyr) # Data transformation
+library(magrittr) # Piping
+library(xlsx) # Exporting to Excel
+library(miceadds) # Multiple imputation correlation
+library(psych) # For converting rho to Cohen's d
+library(BayesFactor) # For Bayesian statistics
+source('cohen.d.magnitude.R') # Custom function to check the magnitude of Cohen's d values
+source('p.value.sig.R') # Custom function to check the significance of p.values
+source('BF.evidence.R') # Custom function to check the interpretation of Bayes Factors
+
+
+# Load data
+load("SET_CFC.outl.del.imp.RData")
+
+### Men
+## Select male subset
+lowData <- subset_datlist(SET_CFC.outl.del.imp, 
+                          subset = SET_CFC.outl.del.imp[[1]]$LSAS_Split == "Low",
+                          select=c("RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
+                                   "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
+                                   "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
+                                   "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
+                                   "LSAS", "anx.react",
+                                   "PEP.2", "pep.react",
+                                   "RSA.2", "rsa.react",
+                                   "RR.2", "rr.react",
+                                   "Cortisol.1.log", "cort.react"),
+                          toclass="mids")
+
+## Do correlation
+corr <- micombine.cor(mi.res = lowData)
+## Remove double rows (second half)
+corr <- corr[c(1:I(nrow(corr) / 2)), ]
+# Remove everything but correlations involving PAC/AAC in either one but not both columns
+corr <- with(corr, corr[ (grepl( "_Avg_", variable1) | grepl( "_Avg_", variable2)) 
+                         &
+                           !(grepl( "_Avg_", variable1) & grepl( "_Avg_", variable2))
+                         , ])
+# Remove factors
+corr[["variable1"]] <- as.character(corr[["variable1"]]) 
+corr[["variable2"]] <- as.character(corr[["variable2"]])
+
+## Calculate BayesFactors
+# Select data
+Dataset <- mice::complete(lowData, action = "long")
+colnames(Dataset)[1] <- "imp" # Rename imp column
+drops <- c(".id") # Select unnecessary columns to remove
+Dataset <- Dataset[ , !(names(Dataset) %in% drops)] # Remove unnecessary columns
+# Initialize variables
+m <- SET_CFC.outl.del.imp$m # Number of imputed datasets
+corrBF <- matrix(NA, nrow = nrow(corr), ncol = m) # Matrix to put the BayesFactors per imputed dataset
+n.obs <- matrix(NA, nrow = nrow(corr), ncol = m) # Matrix to put the number of observations
+correst <- matrix(NA, nrow = nrow(corr), ncol = m) # Matrix to put the variance of the variables per imputed dataset
+est <- matrix(NA, nrow = nrow(corr), ncol = 1) # Matrix to put the pooled estimates
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed datasets
+  subdata <- Dataset %>% filter(imp == j) %>% select(-imp) %>% as.matrix() # Select imputed dataset
+  for (i in 1:nrow(corr)) { # For all variables in the data
+    BF <- correlationBF(y = subdata[, corr[i, "variable1"]], x = subdata[, corr[i, "variable2"]]) # Calculate BayesFactor
+    corrBF[i, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactor
+    n.obs[i, j] <- length(subdata[, corr[i, "variable1"]]) # Calculate sample size
+    correst[i, j] <- mean( c(var(subdata[, corr[i, "variable1"]]), var(subdata[, corr[i, "variable2"]])) ) / n.obs[i, j] # The standard error of the estimate (necessary for pooling)
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:nrow(corr)) { # For every variable
+  est[i, 1] <- pool.scalar(corrBF[i, ], correst[i, ], n = n.obs[i,], k = 1)[["qbar"]] %>% unlist() %>% round(3)
+}
+# Add bayes factors to dataframe
+corr[, "BF"] <- est
+# Add column with Bayes factor interpretation
+corr[, "BF.evidence"] <- sapply(corr$BF, function(x) BF.evidence(x)) # Add column with interpretation
+
+
+### Partial correlations - rsa with rr
+## For baseline
+corr2 <- micombine.cor(mi.res = lowData, variables = 
+                         c("RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
+                           "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
+                           "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
+                           "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
+                           "RSA.2"), partial = ~"RR.2")
+# Remove double rows (second half)
+corr2 <- corr2[c(1:I(nrow(corr2) / 2)), ]
+# Remove factors
+corr2[["variable1"]] <- as.character(corr2[["variable1"]])
+corr2[["variable2"]] <- as.character(corr2[["variable2"]])
+# Remove every row except for the correlations involving rsa in either one but not both columns
+corr2 <- with(corr2, corr2[ (grepl( "RSA.2", variable1) | grepl( "RSA.2", variable2)) 
+                            &
+                              !(grepl( "RSA.2", variable1) & grepl( "RSA.2", variable2))
+                            , ])
+# Rename rsa to rsa (rr)
+corr2[, "variable1"] <- sub("RSA.2","RSA.2 (RR)" , corr2[, "variable1"])
+corr2[, "variable2"] <- sub("RSA.2","RSA.2 (RR)" , corr2[, "variable2"])
+# Add Bayefactors columns
+corr2[, "BF"] <- NA
+corr2[, "BF.evidence"] <- NA
+# Bind correlations and partial correlations together
+corr <- rbind(corr, corr2)
+
+
+## For reactivity
+corr2 <- micombine.cor(mi.res = lowData, variables = 
+                         c("RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
+                           "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
+                           "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
+                           "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
+                           "rsa.react"), partial = ~"rr.react")
+# Remove double rows (second half)
+corr2 <- corr2[c(1:I(nrow(corr2) / 2)), ]
+# Remove factors
+corr2[["variable1"]] <- as.character(corr2[["variable1"]])
+corr2[["variable2"]] <- as.character(corr2[["variable2"]])
+# Remove every row except for the correlations involving rsa in either one but not both columns
+corr2 <- with(corr2, corr2[ (grepl( "rsa.react", variable1) | grepl( "rsa.react", variable2)) 
+                            &
+                              !(grepl( "rsa.react", variable1) & grepl( "rsa.react", variable2))
+                            , ])
+# Rename rsa to rsa (rr)
+corr2[, "variable1"] <- sub("rsa.react","rsa.react (RR)" , corr2[, "variable1"])
+corr2[, "variable2"] <- sub("rsa.react","rsa.react (RR)" , corr2[, "variable2"])
+# Add Bayefactors columns
+corr2[, "BF"] <- NA
+corr2[, "BF.evidence"] <- NA
+# Bind correlations and partial correlations together
+corr <- rbind(corr, corr2)
+
+
+# Restructure correlation matrix
+rownames(corr) <- NULL # Reset rownames
+drops <- c("rse", "fisher_r", "fisher_rse", "fmi", "t", "lower95", "upper95") # Select unnecessary columns to remove
+corr <- corr[ , !(names(corr) %in% drops)] # Remove unnecessary columns
+corr[, "LSAS"] <- "Low" # Add 'male' indicator
+
+## Add Cohen's d
+rho <- corr[, "r"] # Extract rho
+d <-  r2d(rho) # Calculate Cohen's d from rho
+corr$cohen.d <- abs(d) # Put the absolute of Cohen's d in dataframe
+corr$cohen.d.mag <- sapply(corr$cohen.d, function(x) cohen.d.magnitude(x)) # Add column with magnitude of cohen's d
+
+## Save to ultimate dataframe
+corrs <- corr
+
+
+### Women
+## Select female subset
+highData <- subset_datlist(SET_CFC.outl.del.imp, 
+                           subset = SET_CFC.outl.del.imp[[1]]$LSAS_Split == "High",
+                           select=c("RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
+                                    "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
+                                    "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
+                                    "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
+                                    "LSAS", "anx.react",
+                                    "PEP.2", "pep.react",
+                                    "RSA.2", "rsa.react",
+                                    "RR.2", "rr.react",
+                                    "Cortisol.1.log", "cort.react"),
+                           toclass="mids")
+
+## Do correlation
+corr <- micombine.cor(mi.res = highData)
+## Remove double rows (second half)
+corr <- corr[c(1:I(nrow(corr) / 2)), ]
+# Remove everything but correlations involving PAC/AAC in either one but not both columns
+corr <- with(corr, corr[ (grepl( "_Avg_", variable1) | grepl( "_Avg_", variable2)) 
+                         &
+                           !(grepl( "_Avg_", variable1) & grepl( "_Avg_", variable2))
+                         , ])
+# Remove factors
+corr[["variable1"]] <- as.character(corr[["variable1"]]) 
+corr[["variable2"]] <- as.character(corr[["variable2"]])
+
+## Calculate BayesFactors
+# Select data
+Dataset <- mice::complete(highData, action = "long")
+colnames(Dataset)[1] <- "imp" # Rename imp column
+drops <- c(".id") # Select unnecessary columns to remove
+Dataset <- Dataset[ , !(names(Dataset) %in% drops)] # Remove unnecessary columns
+# Initialize variables
+m <- SET_CFC.outl.del.imp$m # Number of imputed datasets
+corrBF <- matrix(NA, nrow = nrow(corr), ncol = m) # Matrix to put the BayesFactors per imputed dataset
+n.obs <- matrix(NA, nrow = nrow(corr), ncol = m) # Matrix to put the number of observations
+correst <- matrix(NA, nrow = nrow(corr), ncol = m) # Matrix to put the variance of the variables per imputed dataset
+est <- matrix(NA, nrow = nrow(corr), ncol = 1) # Matrix to put the pooled estimates
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed datasets
+  subdata <- Dataset %>% filter(imp == j) %>% select(-imp) %>% as.matrix() # Select imputed dataset
+  for (i in 1:nrow(corr)) { # For all variables in the data
+    BF <- correlationBF(y = subdata[, corr[i, "variable1"]], x = subdata[, corr[i, "variable2"]]) # Calculate BayesFactor
+    corrBF[i, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactor
+    n.obs[i, j] <- length(subdata[, corr[i, "variable1"]]) # Calculate sample size
+    correst[i, j] <- mean( c(var(subdata[, corr[i, "variable1"]]), var(subdata[, corr[i, "variable2"]])) ) / n.obs[i, j] # The standard error of the estimate (necessary for pooling)
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:nrow(corr)) { # For every variable
+  est[i, 1] <- pool.scalar(corrBF[i, ], correst[i, ], n = n.obs[i,], k = 1)[["qbar"]] %>% unlist() %>% round(3)
+}
+# Add bayes factors to dataframe
+corr[, "BF"] <- est
+# Add column with Bayes factor interpretation
+corr[, "BF.evidence"] <- sapply(corr$BF, function(x) BF.evidence(x)) # Add column with interpretation
+
+
+### Partial correlations - rsa with rr
+## For baseline
+corr2 <- micombine.cor(mi.res = highData, variables = 
+                         c("RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
+                           "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
+                           "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
+                           "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
+                           "RSA.2"), partial = ~"RR.2")
+# Remove double rows (second half)
+corr2 <- corr2[c(1:I(nrow(corr2) / 2)), ]
+# Remove factors
+corr2[["variable1"]] <- as.character(corr2[["variable1"]])
+corr2[["variable2"]] <- as.character(corr2[["variable2"]])
+# Remove every row except for the correlations involving rsa in either one but not both columns
+corr2 <- with(corr2, corr2[ (grepl( "RSA.2", variable1) | grepl( "RSA.2", variable2)) 
+                            &
+                              !(grepl( "RSA.2", variable1) & grepl( "RSA.2", variable2))
+                            , ])
+# Rename rsa to rsa (rr)
+corr2[, "variable1"] <- sub("RSA.2","RSA.2 (RR)" , corr2[, "variable1"])
+corr2[, "variable2"] <- sub("RSA.2","RSA.2 (RR)" , corr2[, "variable2"])
+# Add Bayefactors columns
+corr2[, "BF"] <- NA
+corr2[, "BF.evidence"] <- NA
+# Bind correlations and partial correlations together
+corr <- rbind(corr, corr2)
+
+## For reactivity
+corr2 <- micombine.cor(mi.res = highData, variables = 
+                         c("RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
+                           "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
+                           "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
+                           "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
+                           "rsa.react"), partial = ~"rr.react")
+# Remove double rows (second half)
+corr2 <- corr2[c(1:I(nrow(corr2) / 2)), ]
+# Remove factors
+corr2[["variable1"]] <- as.character(corr2[["variable1"]])
+corr2[["variable2"]] <- as.character(corr2[["variable2"]])
+# Remove every row except for the correlations involving rsa in either one but not both columns
+corr2 <- with(corr2, corr2[ (grepl( "rsa.react", variable1) | grepl( "rsa.react", variable2)) 
+                            &
+                              !(grepl( "rsa.react", variable1) & grepl( "rsa.react", variable2))
+                            , ])
+# Rename rsa to rsa (rr)
+corr2[, "variable1"] <- sub("rsa.react","rsa.react (RR)" , corr2[, "variable1"])
+corr2[, "variable2"] <- sub("rsa.react","rsa.react (RR)" , corr2[, "variable2"])
+# Add Bayefactors columns
+corr2[, "BF"] <- NA
+corr2[, "BF.evidence"] <- NA
+# Bind correlations and partial correlations together
+corr <- rbind(corr, corr2)
+
+
+# Restructure correlation matrix
+rownames(corr) <- NULL # Reset rownames
+drops <- c("rse", "fisher_r", "fisher_rse", "fmi", "t", "lower95", "upper95") # Select unnecessary columns to remove
+corr <- corr[ , !(names(corr) %in% drops)] # Remove unnecessary columns
+corr[, "LSAS"] <- "High" # Add 'female' indicator
+
+## Add Cohen's d
+rho <- corr[, "r"] # Extract rho
+d <-  r2d(rho) # Calculate Cohen's d from rho
+corr$cohen.d <- abs(d) # Put the absolute of Cohen's d in dataframe
+corr$cohen.d.mag <- sapply(corr$cohen.d, function(x) cohen.d.magnitude(x)) # Add column with magnitude of cohen's d
+
+## Save to ultimate dataframe
+corrs <- rbind(corrs, corr)
+
+## Do fdr-correction
+corrs[, "p.value.adj"] <- p.adjust(corrs[, "p"], method = "fdr", n = nrow(corrs))
+# Check significance
+corrs[, "p.adj.sig"] <- sapply(corrs[, "p.value.adj"], function(x) p.value.sig(x)) # corrsected
+corrs[, "p.value.sig"] <- sapply(corrs[, "p"], function(x) p.value.sig(x)) # Uncorrsected
+
+
+# Order based on p-value
+corrs <- corrs %>% arrange(p)
+
+
+## Save results
+# base
+write.xlsx(corrs, "Correlations.LSAS_SET_CFC.xlsx")
+
+
+## Remove temporary variables
+remove(corr)
+remove(corr2)
+remove(corrs)
+remove(p.value.sig)
+remove(subdata)
+remove(d)
+remove(drops)
+remove(i)
+remove(j)
+remove(m)
+remove(Dataset)
+remove(correst)
+remove(corrBF)
+remove(est)
+remove(n.obs)
+remove(rho)
+remove(BF.evidence)
+remove(BF)
+remove(cohen.d.magnitude)
+remove(highData)
+remove(lowData)
 
 
 # Heatmap correlations (exloratory) -----------------------------------------------------
@@ -4591,7 +4987,7 @@ library(miceadds) # For multiple imputed correlation
 load("SET_CFC.outl.del.imp.RData")
 
 ### Scatterplots
-tiff("Scatter_SigCorrs.tiff", width = 75, height = 20, units = "cm", res = 300) # Save TIFF file
+tiff("Scatter_SigCorrs.tiff", width = 50, height = 20, units = "cm", res = 300) # Save TIFF file
 
 ## Figure 1: RS_Parietal_Avg_dPAC_Z with RSA.2
 corr <- micombine.cor(mi.res = SET_CFC.outl.del.imp, variables =  # Calculate spearman correlation
@@ -4616,16 +5012,16 @@ Fig1 <- ggplot(data, aes(x = RSA.2, y = RS_Parietal_Avg_dPAC_Z)) + # Make a plot
 print(Fig1)
 
 
-## Figure 2: react_Parietal_Avg_dPAC_Z with pep.react
+## Figure 2: react_Parietal_Avg_AAC_R with pep.react
 corr <- micombine.cor(mi.res = SET_CFC.outl.del.imp, variables =  # Calculate spearman correlation
-                        c("pep.react", "react_Parietal_Avg_dPAC_Z"))
+                        c("pep.react", "react_Parietal_Avg_AAC_R"))
 corr <- corr[1, "r"] %>% round(2) # Extract correlation coefficient and round
 data <- mice::complete(SET_CFC.outl.del.imp, action = 1) # Select the first imputed dataset for illustration purposes
-Fig2 <- ggplot(data, aes(x = pep.react, y = react_Parietal_Avg_dPAC_Z)) + # Make a plot
+Fig2 <- ggplot(data, aes(x = pep.react, y = react_Parietal_Avg_AAC_R)) + # Make a plot
   geom_point(shape = 1, size = 2, stroke = 1.5) + # Add large hollow scatter point
   geom_smooth(method = lm, colour = "black", size = 1.5) + # Add a thick black regression line
-  labs(title="Reactivity of parietal PAC vs. PEP", # Add a title, axis labels, and a subtitle
-       y = "Parietal PAC reactivity (Z-score)", x = "PEP reactivity (ms)",
+  labs(title="Reactivity of parietal AAC vs. PEP", # Add a title, axis labels, and a subtitle
+       y = "Parietal AAC reactivity (corr.)", x = "PEP reactivity (ms)",
        subtitle = "b)", 
        caption = bquote(italic("r =") ~ .(corr) ) ) + # Show correlation coefficient in caption
   theme_classic() + # Remove background and gridlines
@@ -4639,36 +5035,13 @@ Fig2 <- ggplot(data, aes(x = pep.react, y = react_Parietal_Avg_dPAC_Z)) + # Make
 print(Fig2)
 
 
-## Figure 3: react_Parietal_Avg_AAC_R with pep.react
-corr <- micombine.cor(mi.res = SET_CFC.outl.del.imp, variables =  # Calculate spearman correlation
-                        c("pep.react", "react_Parietal_Avg_AAC_R"))
-corr <- corr[1, "r"] %>% round(2) # Extract correlation coefficient and round
-data <- mice::complete(SET_CFC.outl.del.imp, action = 1) # Select the first imputed dataset for illustration purposes
-Fig3 <- ggplot(data, aes(x = pep.react, y = react_Parietal_Avg_AAC_R)) + # Make a plot
-  geom_point(shape = 1, size = 2, stroke = 1.5) + # Add large hollow scatter point
-  geom_smooth(method = lm, colour = "black", size = 1.5) + # Add a thick black regression line
-  labs(title="Reactivity of parietal AAC vs. PEP", # Add a title, axis labels, and a subtitle
-       y = "Parietal AAC reactivity (corr.)", x = "PEP reactivity (ms)",
-       subtitle = "c)", 
-       caption = bquote(italic("r =") ~ .(corr) ) ) + # Show correlation coefficient in caption
-  theme_classic() + # Remove background and gridlines
-  theme(
-    axis.title = element_text(size = 15), # Increase size of axis labels
-    axis.text = element_text(size = 14, colour = "black"), # Increase size of axis ticks
-    plot.title = element_text(size = 20, hjust = 0.5, face = "bold"), # Increase size of bold title and align in the middle
-    plot.subtitle = element_text(size = 20, face = "bold"), # Increase size of subtitle and make bold
-    plot.caption = element_text(size = 15, hjust = 0) # Increase size of subcaption and place left
-  )
-print(Fig3)
-
-
 # Arrange plots side-by-side
-grid.arrange(Fig1, Fig2, Fig3, nrow = 1)
+grid.arrange(Fig1, Fig2, nrow = 1)
 # Print Figure
 dev.off()
 
 ## Remove temporary variables
-remove(Fig1, Fig2, Fig3)
+remove(Fig1, Fig2)
 remove(data)
 remove(corr)
 
@@ -4693,10 +5066,15 @@ source('BF.evidence.R') # Custom function to check the interpretation of Bayes F
 
 # Initialize data
 data_obtained <- SET_CFC.outl.del.imp.extra %$% 
-  cbind.data.frame(frontal_PAC.auc,
+  cbind.data.frame(frontal_PAC.auc, 
                    parietal_PAC.auc,
                    frontal_AAC.auc,
-                   parietal_AAC.auc)
+                   parietal_AAC.auc,
+                   anx.auc, 
+                   pep.auc,
+                   rsa.auc,
+                   rr.auc,
+                   cort.auc)
 
 ### T-tests 
 # Initialize variables
@@ -4730,12 +5108,14 @@ t.table[, 4] <- t.table[, 4] %>% as.numeric() %>% round(5) # Set the BF column t
 # E.g., BF10 = 4 means that there is four times more evidence for H1 than for H0.
 # Select data that have matching previously-observed data in long format
 data_obtained_long <- mice::complete(SET_CFC.outl.del.imp.extra, action = "long")
-data_obtained_long <- select(data_obtained_long, c(".imp", "frontal_PAC.auc",
-                                                   "frontal_AAC.auc"))
+data_obtained_long <- select(data_obtained_long, c(".imp", 
+                                                   "frontal_PAC.auc",
+                                                   "frontal_AAC.auc", 
+                                                   "anx.auc"))
 colnames(data_obtained_long)[1] <- "imp" # Reset imp column name without dot
 # Select CFC reactivity data from previous study
-load("LSA_HSA.RData") # Load prior data
-data_theory <- select(LSA_HSA, c("frontal_PAC.auc", "frontal_AAC.auc")) %>% as.matrix()
+load("LSA_HSA_brief.RData") # Load prior data
+data_theory <- select(LSA_HSA_brief, c("frontal_PAC.auc", "frontal_AAC.auc", "anx.auc")) %>% as.matrix()
 BF <- list() # Initialize results list for uninformed priors
 # Initialize variables for pooling informed priors
 m <- SET_CFC.outl.del.imp.extra$m # Number of imputed datasets
@@ -4827,7 +5207,7 @@ remove(data_obtained)
 remove(data_obtained_long)
 remove(BF_test)
 remove(BF)
-remove(LSA_HSA)
+remove(LSA_HSA_brief)
 remove(t_est)
 remove(t.val)
 remove(BF_t)

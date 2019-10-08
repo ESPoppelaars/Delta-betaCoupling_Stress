@@ -127,7 +127,7 @@ summary(SET_CFC$react_Parietal_Avg_AAC_R)
 # Save new variables in the dataset
 save(SET_CFC, file = "SET_CFC.RData")
 
-# Check whether there are no missing values
+# Check whether there are any missing values
 any(is.na(SET_CFC))
 
 # Calculation of recovery (exploratory) ---------------------------------------------------
@@ -460,23 +460,14 @@ for (n in 1:obs) {
 # Add new variable to dataframe
 SET_CFC$parietal_AAC.auc <- AUC1
 
-# Make sure all the recovery variables are of class numeric.
-sapply(SET_CFC, class) # Check class.
-library(dplyr)
-SET_CFC <- SET_CFC %>% mutate_if(funs(class(.) == "matrix"), as.numeric)
-sapply(SET_CFC, class) # Check class again.
 
-
-### Cortisol
+### Anxiety
 ## AUC
 # Initialize data
-t = as.vector(c(0, 38, 49, 54, 59, 64, 69)) # For hormones
-
-# For cortisol
-data <- SET_CFC %$% cbind.data.frame(Cortisol.1.log, Cortisol.2.log, Cortisol.3.log, 
-                                 Cortisol.4.log, Cortisol.5.log, Cortisol.6.log, 
-                                 Cortisol.7.log)
-
+t = as.vector(c(0, 28, 35, 45, 50, 55, 60, 65)) # For VAS
+# Select data
+data <- SET_CFC %$% cbind.data.frame(Anx.1, Anx.2, Anx.3, Anx.4, 
+                                     Anx.5, Anx.6, Anx.7, Anx.8)
 # Initialize variables
 auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
 # First part of formula for calculating AUCg
@@ -487,16 +478,279 @@ for (j in 1:nrow(data)) {
 }
 # Second part of formula for calculating AUCg
 AUCg <- rowSums(auc)
-
 # Subtract the ground of AUCg to get AUC1
 AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
 for (i in 1:nrow(data)) {
   AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
 }
+# Save into new dataset
+SET_CFC$anx.auc <- AUC1 %>% as.numeric()
 
+
+### Approach motivation
+## AUC
+# Initialize data
+t = as.vector(c(0, 28, 35, 45, 50, 55, 60, 65)) # For VAS
+# Select data
+data <- SET_CFC %$% cbind.data.frame(Appr.1, Appr.2, Appr.3, Appr.4, 
+                                     Appr.5, Appr.6, Appr.7, Appr.8)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC$appr.auc <- AUC1 %>% as.numeric()
+
+
+### Blood pressure
+## AUC
+# Initialize data
+t = as.vector(c(0, 7, 41, 47, 59, 65, 90, 96)) # For BP
+# Select data
+data <- SET_CFC %$% cbind.data.frame(BP.1, BP.2, BP.3, BP.4,
+                                     BP.5, BP.6, BP.7, BP.8)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC$bp.auc <- AUC1 %>% as.numeric()
+
+
+### Heart rate
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC %$% cbind.data.frame(HR.1, HR.2, HR.3, HR.4,
+                                     HR.7, HR.8, HR.9, HR.10)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC$hr.auc <- AUC1 %>% as.numeric()
+
+
+### PEP
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC %$% cbind.data.frame(PEP.1, PEP.2, PEP.3, PEP.4,
+                                     PEP.7, PEP.8, PEP.9, PEP.10)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC$pep.auc <- AUC1 %>% as.numeric()
+
+
+### Cardiac output
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC %$% cbind.data.frame(CO.1, CO.2, CO.3, CO.4,
+                                     CO.7, CO.8, CO.9, CO.10)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC$co.auc <- AUC1 %>% as.numeric()
+
+
+### TPR
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC %$% cbind.data.frame(TPR.1, TPR.2, TPR.3, TPR.4,
+                                     TPR.5, TPR.6, TPR.7, TPR.8)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC$tpr.auc <- AUC1 %>% as.numeric()
+
+### TCI
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC %$% cbind.data.frame(TCI.1, TCI.2, TCI.3, TCI.4,
+                                     TCI.5, TCI.6, TCI.7, TCI.8)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC$tci.auc <- AUC1 %>% as.numeric()
+
+
+### RSA
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC %$% cbind.data.frame(RSA.1, RSA.2, RSA.3, RSA.4,
+                                     RSA.7, RSA.8, RSA.9, RSA.10)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC$rsa.auc <- AUC1 %>% as.numeric()
+
+
+### RR
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC %$% cbind.data.frame(RR.1, RR.2, RR.3, RR.4,
+                                     RR.7, RR.8, RR.9, RR.10)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC$rr.auc <- AUC1 %>% as.numeric()
+
+
+### Cortisol
+## AUC
+# Initialize data
+t = as.vector(c(0, 38, 49, 54, 59, 64, 69)) # For hormones
+# For cortisol
+data <- SET_CFC %$% cbind.data.frame(Cortisol.1.log, Cortisol.2.log, Cortisol.3.log, 
+                                 Cortisol.4.log, Cortisol.5.log, Cortisol.6.log, 
+                                 Cortisol.7.log)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
 # Save into new dataset
 SET_CFC$cort.auc <- AUC1 %>% as.numeric()
 
+# Make sure all the recovery variables are of class numeric.
+sapply(SET_CFC, class) # Check class.
+library(dplyr)
+SET_CFC <- SET_CFC %>% mutate_if(funs(class(.) == "matrix"), as.numeric)
+sapply(SET_CFC, class) # Check class again.
 
 ### Save dataframe
 save(SET_CFC, file = "SET_CFC.RData")
@@ -511,17 +765,19 @@ remove(auc, AUC1, AUCg, data, i, j, t, n, obs)
 library(outliers) # Grubbs test
 library(magrittr) # Piping
 library(xlsx) # Exporting to Excel
+library(dplyr) # Data manipulation
 
 # Load data
 load("SET_CFC.RData")
-data <- SET_CFC %>% select("Subject", 
-                           "RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
-                           "recov_Frontal_Avg_dPAC_Z",
+data <- SET_CFC %>% select("Subject", "RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
                            "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
-                           "recov_Frontal_Avg_AAC_R",
-                           "LSAS", "anx.react", "anx.recov",
-                           "Cortisol.1.log", "cort.react", "cort.recov",
-                           "RSA.2", "rsa.react", "rsa.recov")
+                           "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
+                           "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
+                           "LSAS", "anx.react",
+                           "PEP.2", "pep.react",
+                           "RSA.2", "rsa.react",
+                           "RR.2", "rr.react",
+                           "Cortisol.1.log", "cort.react")
 
 # Check outliers
 grub <- list(NA)
@@ -618,53 +874,6 @@ remove(i)
 remove(num.outl)
 
 
-# Normality tests (preregistered) ---------------------------------------------------------
-# Load packages
-library(dplyr) # Data manipulation
-library(magrittr) # Piping
-library(xlsx) # Exporting to Excel
-source('p.value.sig.R') # Custom function to check the significance of p.values
-
-# Load data
-load("SET_CFC.outl.del.RData")
-data <- SET_CFC.outl.del %>% select("Subject", 
-                           "RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
-                           "recov_Frontal_Avg_dPAC_Z",
-                           "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
-                           "recov_Frontal_Avg_AAC_R",
-                           "LSAS", "anx.react", "anx.recov",
-                           "Cortisol.1.log", "cort.react", "cort.recov",
-                           "RSA.2", "rsa.react", "rsa.recov")
-
-## Shapiro-Wilk test of normality
-# Initialize results list
-normTest <- list()
-# Test all columns in the data
-for (i in 1:ncol(data)) {
-  normTest[[i]] <- shapiro.test(data[, i])
-  normTest[[i]][["data.name"]] <- colnames(data)[i]
-}
-# Convert results to a dataframe
-normTest_df <- do.call(rbind.data.frame, normTest)
-# Do FDR-correction on p-values
-p.val <- normTest_df$p.value
-p.adj <-  p.adjust(p.val, method = "fdr", n = length(p.val)) # Do fdr-correction
-normTest_df$p.adj <- p.adj
-normTest_df$p.adj.sig <- sapply(normTest_df$p.adj, function(x) p.value.sig(x)) # Add column with significance
-
-# Save lm results
-write.xlsx(normTest_df, "normTest.SET_CFC.outl.del_brief.xlsx")
-
-## Remove temporary variables
-remove(normTest_df)
-remove(normTest)
-remove(i)
-remove(data)
-remove(p.val)
-remove(p.adj)
-remove(p.value.sig)
-
-
 # Median split trait social anxiety (exploratory) ------------------------------------------------------------
 
 # Median split the LSAS variable
@@ -737,11 +946,21 @@ meth["LateAnticip_Frontal_Avg_AAC_R"]<- ""
 meth["LateAnticip_Parietal_Avg_AAC_R"]<- ""
 
 # No passive imputation for complex variables
-meth["cort.auc"]<- ""
-meth["parietal_AAC.auc"]<- ""
+meth["frontal_PAC.auc"]<- ""
 meth["parietal_PAC.auc"]<- ""
 meth["frontal_AAC.auc"]<- ""
-meth["frontal_PAC.auc"]<- ""
+meth["parietal_AAC.auc"]<- ""
+meth["anx.auc"]<- ""
+meth["appr.auc"]<- ""
+meth["bp.auc"]<- ""
+meth["hr.auc"]<- ""
+meth["pep.auc"]<- ""
+meth["co.auc"]<- ""
+meth["tpr.auc"]<- ""
+meth["tci.auc"]<- ""
+meth["rsa.auc"]<- ""
+meth["rr.auc"]<- ""
+meth["cort.auc"]<- ""
 
 # Passive imputation for BMI
 meth["BMI"]<- "~ I(Weight / I(Height^2) )"
@@ -805,7 +1024,7 @@ save(meth, file = "meth.RData")
 #load("meth.RData")
 
 # Missing data percentage
-mis <- 100-(sum(complete.cases(SET_CFC.outl.del))*100/nrow(SET_CFC.outl.del)) %>% round(0)
+mis <- 100 - (sum(complete.cases(SET_CFC.outl.del)) * 100 / nrow(SET_CFC.outl.del)) %>% round(0)
 
 ## Imputations in mice.
 SET_CFC.outl.del.imp <- mice(SET_CFC.outl.del, # Dataset.
@@ -818,7 +1037,7 @@ SET_CFC.outl.del.imp <- mice(SET_CFC.outl.del, # Dataset.
                     print = FALSE); # Don't print the endless list of computations.
 beep("ping") # Play sound when computations are finished.
 
-# Save the imp object to avoid having to re-run it.
+# Save the imp object immediately to avoid having to re-run it.
 save(SET_CFC.outl.del.imp, file = "SET_CFC.outl.del.imp.RData")
 
 # For loading the imp object later.
@@ -831,15 +1050,26 @@ warnings()
 SET_CFC.outl.del.imp$loggedEvents # If NULL, there are no multicolinearity issues.
 
 ## Plots
+# Index which variables have been imputed to only plot those
+vars <- meth %>% as.data.frame(stringsAsFactors = FALSE) # Get the method matrix as dataframe
+colnames(vars) <- "meth" # Set the columnname
+vars[, "variable"] <- rownames(vars) # Create a column with the variable names
+vars <- vars %>% mutate_all(na_if,"") # Replace "" with NA
+vars <- vars[which(!is.na(vars[, "meth"])), "variable"] # Select the variable names that are not NA in the method matrix
+vars_formula <- paste0(vars, collapse=" + ") # Add the terms together
+
+# Convergence plots
 SET.confplots <- plot(SET_CFC.outl.del.imp, layout = c(2, 2)) # Plot the iterations and check convergence.
 SET.confplots
 # The passive imputations plots will be straight lines, all other variables need to have overlapping squiggly lines that are close together on the right side.
 # -> No variance for variables only missing a single observation (HR.1, HR.2, RSA.1, RSA.2).
 # Boxplots
-SET.bwplots <- bwplot(SET_CFC.outl.del.imp, cex = 0.5, layout = c(1, 3)) # See boxplots of the imputated data for each set and variable to compare with original data.
+SET.bwplots <- bwplot(SET_CFC.outl.del.imp, data = as.formula(paste0(vars_formula, " ~ .imp")),
+                      cex = 0.5, layout = c(1, 3)) # See boxplots of the imputated data for each set and variable to compare with original data.
 SET.bwplots
 # Stripplots
-SET.stripplots <- stripplot(SET_CFC.outl.del.imp, cex = 0.5, layout = c(1, 3))# See stripplots of the imputated data for each set and variable to compare with original data.
+SET.stripplots <- stripplot(SET_CFC.outl.del.imp, data = as.formula(paste0(vars_formula, " ~ .imp")), 
+                            cex = 0.5, layout = c(1, 3))# See stripplots of the imputated data for each set and variable to compare with original data.
 SET.stripplots
 
 # Check out the imputed data
@@ -889,30 +1119,6 @@ ggplot(SET_CFC.outl.del,aes(x=react_Parietal_Avg_AAC_R)) +
   geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
   labs(title="Parietal AAC reactivity distribution by complete (red) and imputed (blue / thick line) data") +
   labs(x="Parietal AAC reactivity")
-# Frontal PAC recovery
-ggplot(SET_CFC.outl.del,aes(x=recov_Frontal_Avg_dPAC_Z)) + 
-  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,6)), alpha = 0.2, fill = "blue", size = 1) +
-  geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
-  labs(title="Frontal PAC recovery distribution by complete (red) and imputed (blue / thick line) data") +
-  labs(x="Frontal PAC recovery")
-# Parietal PAC recovery
-ggplot(SET_CFC.outl.del,aes(x=recov_Parietal_Avg_dPAC_Z)) + 
-  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,6)), alpha = 0.2, fill = "blue", size = 1) +
-  geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
-  labs(title="Parietal PAC recovery distribution by complete (red) and imputed (blue / thick line) data") +
-  labs(x="Parietal PAC recovery")
-# Frontal AAC recovery
-ggplot(SET_CFC.outl.del,aes(x=recov_Frontal_Avg_AAC_R)) + 
-  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,6)), alpha = 0.2, fill = "blue", size = 1) +
-  geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
-  labs(title="Frontal AAC recovery distribution by complete (red) and imputed (blue / thick line) data") +
-  labs(x="Frontal AAC recovery")
-# Parietal AAC recovery
-ggplot(SET_CFC.outl.del,aes(x=recov_Parietal_Avg_AAC_R)) + 
-  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,6)), alpha = 0.2, fill = "blue", size = 1) +
-  geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
-  labs(title="Parietal AAC recovery distribution by complete (red) and imputed (blue / thick line) data") +
-  labs(x="Parietal AAC recovery")
 
 
 ## Remove temporary variables
@@ -923,6 +1129,8 @@ remove(mis)
 remove(SET.stripplots)
 remove(SET.bwplots)
 remove(SET.confplots)
+remove(vars)
+remove(vars_formula)
 
 
 # Area under the curve - imputed ------------------------------------------
@@ -936,9 +1144,11 @@ library(xlsx) # Exporting to Excel
 
 # Load data
 load("SET_CFC.outl.del.imp.RData")
+# Create new imp object
+SET_CFC.outl.del.imp.extra <- SET_CFC.outl.del.imp
 
 ## Transform imputed data to a long-format data frame, without the original data
-long.imp <- complete(SET_CFC.outl.del.imp, action='long', include=TRUE)
+long.imp <- mice::complete(SET_CFC.outl.del.imp, action='long', include=TRUE)
 
 ### Calculation of AUC for Frontal PAC
 # Calculate AUC for every dataset
@@ -962,38 +1172,32 @@ t <- as.vector(c(0, 30, 49, 79)) # Time points of each measurement
 auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
 AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
 AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
-
-# Loop for all imputed datasets
-for (m in 1:imp) {
-  # Subset current imputed dataset (without the imp and Subect column)
-  subdata <- subset(misData, imp == m, select = -c(imp, Subject))
-  
-  # First part of formula for calculating AUCg
-  for (n in 1:misobs) {
-    for (i in 1:I(length(t)-1)) {
-      auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
     }
   }
-  
-  # Second part of formula for calculating AUCg
-  AUCg[, m] <- rowSums(auc[, , m])
-  
-  # Subtract the ground of AUCg to get AUC1
-  for (i in 1:misobs) {
-    AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
-  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["frontal_PAC.auc"]] <- AUC1
 }
-
-# SET rownames
-rownames(AUC1) <- misrows
-# SET columnnames
-colnames(AUC1) <- 1:imp %>% as.character()
-
-## Save new data
-# Duplicate old imputed object
-SET_CFC.outl.del.imp.extra <- SET_CFC.outl.del.imp
-# Put new variables into imputed values of imputed datasets
-SET_CFC.outl.del.imp.extra[["imp"]][["frontal_PAC.auc"]] <- AUC1
 
 
 ### Calculation of AUC for Parietal PAC
@@ -1018,36 +1222,32 @@ t <- as.vector(c(0, 30, 49, 79)) # Time points of each measurement
 auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
 AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
 AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
-
-# Loop for all imputed datasets
-for (m in 1:imp) {
-  # Subset current imputed dataset (without the imp and Subect column)
-  subdata <- subset(misData, imp == m, select = -c(imp, Subject))
-  
-  # First part of formula for calculating AUCg
-  for (n in 1:misobs) {
-    for (i in 1:I(length(t)-1)) {
-      auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
     }
   }
-  
-  # Second part of formula for calculating AUCg
-  AUCg[, m] <- rowSums(auc[, , m])
-  
-  # Subtract the ground of AUCg to get AUC1
-  for (i in 1:misobs) {
-    AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
-  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["parietal_PAC.auc"]] <- AUC1
 }
-
-# SET rownames
-rownames(AUC1) <- misrows
-# SET columnnames
-colnames(AUC1) <- 1:imp %>% as.character()
-
-## Save new data
-# Put new variables into imputed values of imputed datasets
-SET_CFC.outl.del.imp.extra[["imp"]][["parietal_PAC.auc"]] <- AUC1
 
 
 ### Calculation of AUC for Frontal AAC
@@ -1072,37 +1272,32 @@ t <- as.vector(c(0, 30, 49, 79)) # Time points of each measurement
 auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
 AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
 AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
-
-
-# Loop for all imputed datasets
-for (m in 1:imp) {
-  # Subset current imputed dataset (without the imp and Subect column)
-  subdata <- subset(misData, imp == m, select = -c(imp, Subject))
-  
-  # First part of formula for calculating AUCg
-  for (n in 1:misobs) {
-    for (i in 1:I(length(t)-1)) {
-      auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
     }
   }
-  
-  # Second part of formula for calculating AUCg
-  AUCg[, m] <- rowSums(auc[, , m])
-  
-  # Subtract the ground of AUCg to get AUC1
-  for (i in 1:misobs) {
-    AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
-  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["frontal_AAC.auc"]] <- AUC1
 }
-
-# SET rownames
-rownames(AUC1) <- misrows
-# SET columnnames
-colnames(AUC1) <- 1:imp %>% as.character()
-
-## Save new data
-# Put new variables into imputed values of imputed datasets
-SET_CFC.outl.del.imp.extra[["imp"]][["frontal_AAC.auc"]] <- AUC1
 
 
 ### Calculation of AUC for Parietal AAC
@@ -1123,45 +1318,568 @@ misobs <- length(misrows)
 misSubs <- subset(data, data$imp == 0, select = Subject) # Get subject numbers
 misSubs <- misSubs[misrows, ] # Which subject numbers have missing data
 misData <- data %>% filter_at(vars(Subject), any_vars(. %in% misSubs)) # Extract all data for the subjects with missing observations
-
 t <- as.vector(c(0, 30, 49, 79)) # Time points of each measurement
 auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
 AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
 AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
-
-
-
-# Loop for all imputed datasets
-for (m in 1:imp) {
-  # Subset current imputed dataset (without the imp and Subect column)
-  subdata <- subset(misData, imp == m, select = -c(imp, Subject))
-  
-  # First part of formula for calculating AUCg
-  for (n in 1:misobs) {
-    for (i in 1:I(length(t)-1)) {
-      auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
     }
   }
-  
-  # Second part of formula for calculating AUCg
-  AUCg[, m] <- rowSums(auc[, , m])
-  
-  # Subtract the ground of AUCg to get AUC1
-  for (i in 1:misobs) {
-    AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
-  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["parietal_AAC.auc"]] <- AUC1
 }
 
-# SET rownames
-rownames(AUC1) <- misrows
-# SET columnnames
-colnames(AUC1) <- 1:imp %>% as.character()
 
-## Save new data
-# Put new variables into imputed values of imputed datasets
-SET_CFC.outl.del.imp.extra[["imp"]][["parietal_AAC.auc"]] <- AUC1
+### Calculation of AUC for Anxiety
+# Calculate AUC for every dataset
+data <- long.imp %$% cbind.data.frame(.imp, 
+                                      Subject,
+                                      Anx.1, Anx.2, Anx.3, Anx.4, 
+                                      Anx.5, Anx.6, Anx.7, Anx.8)
+colnames(data)[1] <- "imp"
+## Calculate AUC for every imp dataset
+# Initialize variables
+imp <- SET_CFC.outl.del.imp$m # Number of imputations
+obs <- nrow(subset(data, data$imp == 1)) # Number of observations
+misrows <- data[!complete.cases(data), ] %>% rownames() %>% as.numeric() # Calculate rownames that contain missing datapoints
+misobs <- length(misrows)
+misSubs <- subset(data, data$imp == 0, select = Subject) # Get subject numbers
+misSubs <- misSubs[misrows, ] # Which subject numbers have missing data
+misData <- data %>% filter_at(vars(Subject), any_vars(. %in% misSubs)) # Extract all data for the subjects with missing observations
+t <- as.vector(c(0, 28, 35, 45, 50, 55, 60, 65)) # Time points of each measurement
+auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
+AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
+AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
+    }
+  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["anx.auc"]] <- AUC1
+}
 
 
+### Calculation of AUC for Approach motivation
+# Calculate AUC for every dataset
+data <- long.imp %$% cbind.data.frame(.imp, 
+                                      Subject,
+                                      Appr.1, Appr.2, Appr.3, Appr.4, 
+                                      Appr.5, Appr.6, Appr.7, Appr.8)
+colnames(data)[1] <- "imp"
+## Calculate AUC for every imp dataset
+# Initialize variables
+imp <- SET_CFC.outl.del.imp$m # Number of imputations
+obs <- nrow(subset(data, data$imp == 1)) # Number of observations
+misrows <- data[!complete.cases(data), ] %>% rownames() %>% as.numeric() # Calculate rownames that contain missing datapoints
+misobs <- length(misrows)
+misSubs <- subset(data, data$imp == 0, select = Subject) # Get subject numbers
+misSubs <- misSubs[misrows, ] # Which subject numbers have missing data
+misData <- data %>% filter_at(vars(Subject), any_vars(. %in% misSubs)) # Extract all data for the subjects with missing observations
+t <- as.vector(c(0, 28, 35, 45, 50, 55, 60, 65)) # Time points of each measurement
+auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
+AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
+AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
+    }
+  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["appr.auc"]] <- AUC1
+}
+
+
+### Calculation of AUC for Blood pressure
+# Calculate AUC for every dataset
+data <- long.imp %$% cbind.data.frame(.imp, 
+                                      Subject,
+                                      BP.1, BP.2, BP.3, BP.4,
+                                      BP.5, BP.6, BP.7, BP.8)
+colnames(data)[1] <- "imp"
+## Calculate AUC for every imp dataset
+# Initialize variables
+imp <- SET_CFC.outl.del.imp$m # Number of imputations
+obs <- nrow(subset(data, data$imp == 1)) # Number of observations
+misrows <- data[!complete.cases(data), ] %>% rownames() %>% as.numeric() # Calculate rownames that contain missing datapoints
+misobs <- length(misrows)
+misSubs <- subset(data, data$imp == 0, select = Subject) # Get subject numbers
+misSubs <- misSubs[misrows, ] # Which subject numbers have missing data
+misData <- data %>% filter_at(vars(Subject), any_vars(. %in% misSubs)) # Extract all data for the subjects with missing observations
+t <- as.vector(c(0, 7, 41, 47, 59, 65, 90, 96)) # Time points of each measurement
+auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
+AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
+AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
+    }
+  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["bp.auc"]] <- AUC1
+}
+
+
+### Calculation of AUC for Heart rate
+# Calculate AUC for every dataset
+data <- long.imp %$% cbind.data.frame(.imp, 
+                                      Subject,
+                                      HR.1, HR.2, HR.3, HR.4,
+                                      HR.7, HR.8, HR.9, HR.10)
+colnames(data)[1] <- "imp"
+## Calculate AUC for every imp dataset
+# Initialize variables
+imp <- SET_CFC.outl.del.imp$m # Number of imputations
+obs <- nrow(subset(data, data$imp == 1)) # Number of observations
+misrows <- data[!complete.cases(data), ] %>% rownames() %>% as.numeric() # Calculate rownames that contain missing datapoints
+misobs <- length(misrows)
+misSubs <- subset(data, data$imp == 0, select = Subject) # Get subject numbers
+misSubs <- misSubs[misrows, ] # Which subject numbers have missing data
+misData <- data %>% filter_at(vars(Subject), any_vars(. %in% misSubs)) # Extract all data for the subjects with missing observations
+t <- as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # Time points of each measurement
+auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
+AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
+AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
+    }
+  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["hr.auc"]] <- AUC1
+}
+
+
+### Calculation of AUC for PEP
+# Calculate AUC for every dataset
+data <- long.imp %$% cbind.data.frame(.imp, 
+                                      Subject,
+                                      PEP.1, PEP.2, PEP.3, PEP.4,
+                                      PEP.7, PEP.8, PEP.9, PEP.10)
+colnames(data)[1] <- "imp"
+## Calculate AUC for every imp dataset
+# Initialize variables
+imp <- SET_CFC.outl.del.imp$m # Number of imputations
+obs <- nrow(subset(data, data$imp == 1)) # Number of observations
+misrows <- data[!complete.cases(data), ] %>% rownames() %>% as.numeric() # Calculate rownames that contain missing datapoints
+misobs <- length(misrows)
+misSubs <- subset(data, data$imp == 0, select = Subject) # Get subject numbers
+misSubs <- misSubs[misrows, ] # Which subject numbers have missing data
+misData <- data %>% filter_at(vars(Subject), any_vars(. %in% misSubs)) # Extract all data for the subjects with missing observations
+t <- as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # Time points of each measurement
+auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
+AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
+AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
+    }
+  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  ## Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["pep.auc"]] <- AUC1
+}
+
+
+### Calculation of AUC for Cardiac output
+# Calculate AUC for every dataset
+data <- long.imp %$% cbind.data.frame(.imp, 
+                                      Subject,
+                                      CO.1, CO.2, CO.3, CO.4,
+                                      CO.7, CO.8, CO.9, CO.10)
+colnames(data)[1] <- "imp"
+## Calculate AUC for every imp dataset
+# Initialize variables
+imp <- SET_CFC.outl.del.imp$m # Number of imputations
+obs <- nrow(subset(data, data$imp == 1)) # Number of observations
+misrows <- data[!complete.cases(data), ] %>% rownames() %>% as.numeric() # Calculate rownames that contain missing datapoints
+misobs <- length(misrows)
+misSubs <- subset(data, data$imp == 0, select = Subject) # Get subject numbers
+misSubs <- misSubs[misrows, ] # Which subject numbers have missing data
+misData <- data %>% filter_at(vars(Subject), any_vars(. %in% misSubs)) # Extract all data for the subjects with missing observations
+t <- as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # Time points of each measurement
+auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
+AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
+AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
+    }
+  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["co.auc"]] <- AUC1
+}
+
+
+
+### Calculation of AUC for TPR
+# Calculate AUC for every dataset
+data <- long.imp %$% cbind.data.frame(.imp, 
+                                      Subject,
+                                      TPR.1, TPR.2, TPR.3, TPR.4,
+                                      TPR.5, TPR.6, TPR.7, TPR.8)
+colnames(data)[1] <- "imp"
+## Calculate AUC for every imp dataset
+# Initialize variables
+imp <- SET_CFC.outl.del.imp$m # Number of imputations
+obs <- nrow(subset(data, data$imp == 1)) # Number of observations
+misrows <- data[!complete.cases(data), ] %>% rownames() %>% as.numeric() # Calculate rownames that contain missing datapoints
+misobs <- length(misrows)
+misSubs <- subset(data, data$imp == 0, select = Subject) # Get subject numbers
+misSubs <- misSubs[misrows, ] # Which subject numbers have missing data
+misData <- data %>% filter_at(vars(Subject), any_vars(. %in% misSubs)) # Extract all data for the subjects with missing observations
+t <- as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # Time points of each measurement
+auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
+AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
+AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
+    }
+  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["tpr.auc"]] <- AUC1
+}
+
+
+### Calculation of AUC for TCI
+# Calculate AUC for every dataset
+data <- long.imp %$% cbind.data.frame(.imp, 
+                                      Subject,
+                                      TCI.1, TCI.2, TCI.3, TCI.4,
+                                      TCI.5, TCI.6, TCI.7, TCI.8)
+colnames(data)[1] <- "imp"
+## Calculate AUC for every imp dataset
+# Initialize variables
+imp <- SET_CFC.outl.del.imp$m # Number of imputations
+obs <- nrow(subset(data, data$imp == 1)) # Number of observations
+misrows <- data[!complete.cases(data), ] %>% rownames() %>% as.numeric() # Calculate rownames that contain missing datapoints
+misobs <- length(misrows)
+misSubs <- subset(data, data$imp == 0, select = Subject) # Get subject numbers
+misSubs <- misSubs[misrows, ] # Which subject numbers have missing data
+misData <- data %>% filter_at(vars(Subject), any_vars(. %in% misSubs)) # Extract all data for the subjects with missing observations
+t <- as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # Time points of each measurement
+auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
+AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
+AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
+    }
+  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["tci.auc"]] <- AUC1
+}
+
+
+
+### Calculation of AUC for RSA
+# Calculate AUC for every dataset
+data <- long.imp %$% cbind.data.frame(.imp, 
+                                      Subject,
+                                      RSA.1, RSA.2, RSA.3, RSA.4,
+                                      RSA.7, RSA.8, RSA.9, RSA.10)
+colnames(data)[1] <- "imp"
+## Calculate AUC for every imp dataset
+# Initialize variables
+imp <- SET_CFC.outl.del.imp$m # Number of imputations
+obs <- nrow(subset(data, data$imp == 1)) # Number of observations
+misrows <- data[!complete.cases(data), ] %>% rownames() %>% as.numeric() # Calculate rownames that contain missing datapoints
+misobs <- length(misrows)
+misSubs <- subset(data, data$imp == 0, select = Subject) # Get subject numbers
+misSubs <- misSubs[misrows, ] # Which subject numbers have missing data
+misData <- data %>% filter_at(vars(Subject), any_vars(. %in% misSubs)) # Extract all data for the subjects with missing observations
+t <- as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # Time points of each measurement
+auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
+AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
+AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
+    }
+  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["rsa.auc"]] <- AUC1
+}
+
+
+### Calculation of AUC for RR
+# Calculate AUC for every dataset
+data <- long.imp %$% cbind.data.frame(.imp, 
+                                      Subject,
+                                      RR.1, RR.2, RR.3, RR.4,
+                                      RR.7, RR.8, RR.9, RR.10)
+colnames(data)[1] <- "imp"
+## Calculate AUC for every imp dataset
+# Initialize variables
+imp <- SET_CFC.outl.del.imp$m # Number of imputations
+obs <- nrow(subset(data, data$imp == 1)) # Number of observations
+misrows <- data[!complete.cases(data), ] %>% rownames() %>% as.numeric() # Calculate rownames that contain missing datapoints
+misobs <- length(misrows)
+misSubs <- subset(data, data$imp == 0, select = Subject) # Get subject numbers
+misSubs <- misSubs[misrows, ] # Which subject numbers have missing data
+misData <- data %>% filter_at(vars(Subject), any_vars(. %in% misSubs)) # Extract all data for the subjects with missing observations
+t <- as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # Time points of each measurement
+auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
+AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
+AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
+    }
+  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["rr.auc"]] <- AUC1
+}
+
+
+
+### Calculation of AUC for Cortisol
+# Calculate AUC for every dataset
+data <- long.imp %$% cbind.data.frame(.imp, 
+                                      Subject,
+                                      Cortisol.1.log, Cortisol.2.log, Cortisol.3.log, 
+                                      Cortisol.4.log, Cortisol.5.log, Cortisol.6.log, 
+                                      Cortisol.7.log)
+colnames(data)[1] <- "imp"
+## Calculate AUC for every imp dataset
+# Initialize variables
+imp <- SET_CFC.outl.del.imp$m # Number of imputations
+obs <- nrow(subset(data, data$imp == 1)) # Number of observations
+misrows <- data[!complete.cases(data), ] %>% rownames() %>% as.numeric() # Calculate rownames that contain missing datapoints
+misobs <- length(misrows)
+misSubs <- subset(data, data$imp == 0, select = Subject) # Get subject numbers
+misSubs <- misSubs[misrows, ] # Which subject numbers have missing data
+misData <- data %>% filter_at(vars(Subject), any_vars(. %in% misSubs)) # Extract all data for the subjects with missing observations
+t <- as.vector(c(0, 38, 49, 54, 59, 64, 69)) # Time points of each measurement
+auc <- array(NA, dim = c(length(misSubs), length(t)-1, imp))
+AUCg <- matrix(NA, nrow = length(misSubs), ncol = imp)
+AUC1 <- matrix(NA, nrow = length(misSubs), ncol = imp)
+if (misobs > 0) { # Check whether there is any missing data
+  # Loop for all imputed datasets
+  for (m in 1:imp) {
+    # Subset current imputed dataset (without the imp and Subect column)
+    subdata <- subset(misData, imp == m, select = -c(imp, Subject))
+    # First part of formula for calculating AUCg
+    for (n in 1:misobs) {
+      for (i in 1:I(length(t)-1)) {
+        auc[n, i, m] <- I(subdata[n, i+1] + subdata[n, i]) * I(t[i+1]-t[i]) / 2
+      }
+    }
+    # Second part of formula for calculating AUCg
+    AUCg[, m] <- rowSums(auc[, , m])
+    # Subtract the ground of AUCg to get AUC1
+    for (i in 1:misobs) {
+      AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
+    }
+  }
+  # SET rownames
+  rownames(AUC1) <- misrows
+  # SET columnnames
+  colnames(AUC1) <- 1:imp %>% as.character()
+  ## Save new data
+  # Put new variables into imputed values of imputed datasets
+  SET_CFC.outl.del.imp.extra[["imp"]][["cort.auc"]] <- AUC1
+}
 
 ## Check new data
 # Complete imputed data into new variable
@@ -1169,8 +1887,22 @@ long.imp.extra <- complete(SET_CFC.outl.del.imp.extra, action='long', include=FA
 long.imp.extra <- long.imp.extra %$% cbind.data.frame(frontal_PAC.auc, 
                                                       parietal_PAC.auc,
                                                       frontal_AAC.auc,
-                                                      parietal_AAC.auc)
+                                                      parietal_AAC.auc,
+                                                      anx.auc, 
+                                                      appr.auc,
+                                                      bp.auc,
+                                                      hr.auc,
+                                                      pep.auc,
+                                                      co.auc,
+                                                      tpr.auc,
+                                                      tci.auc,
+                                                      rsa.auc,
+                                                      rr.auc,
+                                                      cort.auc)
 View(long.imp.extra)
+
+# Check class
+apply(long.imp.extra, 2, function(x) class(x))
 
 # Save new data
 save(SET_CFC.outl.del.imp.extra, file = "SET_CFC.outl.del.imp.extra.RData")
