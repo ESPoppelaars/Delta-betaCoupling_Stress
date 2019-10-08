@@ -2809,7 +2809,6 @@ source('BF.evidence.R') # Custom function to check the interpretation of Bayes F
 # Load data
 load("SET_CFC.outl.del.imp.RData")
 
-
 ## Correlations
 corr <- micombine.cor(mi.res = SET_CFC.outl.del.imp, variables = 
                         c("RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
@@ -2824,7 +2823,6 @@ corr <- micombine.cor(mi.res = SET_CFC.outl.del.imp, variables =
                           "EnglishCompetence"))
 # Remove double rows (second half)
 corr <- corr[c(1:I(nrow(corr) / 2)), ]
-
 # Remove everything but correlations involving EnglishCompetence in either one of the columns
 corr <- with(corr, corr[ (grepl( "EnglishCompetence", variable1) | grepl( "EnglishCompetence", variable2)) , ])
 rownames(corr) <- NULL # Reset rownames
@@ -2832,20 +2830,6 @@ corr[["variable1"]] <- as.character(corr[["variable1"]]) # Remove factors
 corr[["variable2"]] <- as.character(corr[["variable2"]]) # Remove factors
 drops <- c("rse", "fisher_r", "fisher_rse", "fmi", "t", "lower95", "upper95") # Select unnecessary columns to remove
 corr <- corr[ , !(names(corr) %in% drops)] # Remove unnecessary columns
-
-# Do fdr-correction
-corr[, "p.value.adj"] <- p.adjust(corr[, "p"], method = "fdr", n = nrow(corr))
-# Check significance
-corr[, "p.adj.sig"] <- sapply(corr[, "p.value.adj"], function(x) p.value.sig(x)) # Corrected
-corr[, "p.value.sig"] <- sapply(corr[, "p"], function(x) p.value.sig(x)) # Uncorrected
-
-# Add Cohen's d
-rho <- corr[, "r"] # Extract rho
-d <-  r2d(rho) # Calculate Cohen's d from rho
-corr$cohen.d <- abs(d) # Put the absolute of Cohen's d in dataframe
-corr$cohen.d.mag <- sapply(corr$cohen.d, function(x) cohen.d.magnitude(x)) # Add column with magnitude of cohen's d
-
-
 ## Calculate BayesFactors
 # Select data
 Dataset <- mice::complete(SET_CFC.outl.del.imp, action = "long")
@@ -2880,22 +2864,138 @@ for (j in 1:m) { # For all imputed datasets
 for (i in 1:nrow(corr)) { # For every variable
   est[i, 1] <- pool.scalar(corrBF[i, ], correst[i, ], n = n.obs[i,], k = 1)[["qbar"]] %>% unlist() %>% round(3)
 }
-
 # Add bayes factors to dataframe
 corr[, "BF"] <- est
-# Add column with Bayes factor interpretation
-corr[, "BF.evidence"] <- sapply(corr$BF, function(x) BF.evidence(x)) # Add column with interpretation
+# Add sex to dataframe
+corr[, "Sex"] <- "All"
 
+
+### For men and women separately for RSA react
+## Select male subset
+maleData <- subset_datlist(SET_CFC.outl.del.imp, 
+                           subset = SET_CFC.outl.del.imp[[1]]$Sex == "Male",
+                           select=c("rsa.react",
+                                    "EnglishCompetence"),
+                           toclass="mids")
+## Do correlation
+corr_male <- micombine.cor(mi.res = maleData)
+## Remove double rows (second half)
+corr_male <- corr_male[c(1:I(nrow(corr_male) / 2)), ]
+rownames(corr_male) <- NULL # Reset rownames
+corr_male[["variable1"]] <- as.character(corr_male[["variable1"]]) # Remove factors
+corr_male[["variable2"]] <- as.character(corr_male[["variable2"]]) # Remove factors
+drops <- c("rse", "fisher_r", "fisher_rse", "fmi", "t", "lower95", "upper95") # Select unnecessary columns to remove
+corr_male <- corr_male[ , !(names(corr_male) %in% drops)] # Remove unnecessary columns
+## Calculate BayesFactors
+# Select data
+Dataset <- mice::complete(maleData, action = "long")
+colnames(Dataset)[1] <- "imp" # Rename imp column
+drops <- c(".id") # Select unnecessary columns to remove
+Dataset <- Dataset[ , !(names(Dataset) %in% drops)] # Remove unnecessary columns
+# Initialize variables
+m <- SET_CFC.outl.del.imp$m # Number of imputed datasets
+corrBF <- matrix(NA, nrow = nrow(corr_male), ncol = m) # Matrix to put the BayesFactors per imputed dataset
+n.obs <- matrix(NA, nrow = nrow(corr_male), ncol = m) # Matrix to put the number of observations
+correst <- matrix(NA, nrow = nrow(corr_male), ncol = m) # Matrix to put the variance of the variables per imputed dataset
+est <- matrix(NA, nrow = nrow(corr_male), ncol = 1) # Matrix to put the pooled estimates
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed datasets
+  subdata <- Dataset %>% filter(imp == j) %>% select(-imp) %>% as.matrix() # Select imputed dataset
+  for (i in 1:nrow(corr_male)) { # For all variables in the data
+    BF <- correlationBF(y = subdata[, corr_male[i, "variable1"]], x = subdata[, corr_male[i, "variable2"]]) # Calculate BayesFactor
+    corrBF[i, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactor
+    n.obs[i, j] <- length(subdata[, corr_male[i, "variable1"]]) # Calculate sample size
+    correst[i, j] <- mean( c(var(subdata[, corr_male[i, "variable1"]]), var(subdata[, corr_male[i, "variable2"]])) ) / n.obs[i, j] # The standard error of the estimate (necessary for pooling)
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:nrow(corr_male)) { # For every variable
+  est[i, 1] <- pool.scalar(corrBF[i, ], correst[i, ], n = n.obs[i,], k = 1)[["qbar"]] %>% unlist() %>% round(3)
+}
+# Add bayes factors to dataframe
+corr_male[, "BF"] <- est
+# Add sex to dataframe
+corr_male[, "Sex"] <- "Male"
+## Save to ultimate dataframe
+corrs <- rbind(corr, corr_male)
+
+
+## Select female subset
+femaleData <- subset_datlist(SET_CFC.outl.del.imp, 
+                             subset = SET_CFC.outl.del.imp[[1]]$Sex == "Female",
+                             select=c("rsa.react",
+                                      "EnglishCompetence"),
+                             toclass="mids")
+## Do correlation
+corr_female <- micombine.cor(mi.res = femaleData)
+## Remove double rows (second half)
+corr_female <- corr_female[c(1:I(nrow(corr_female) / 2)), ]
+rownames(corr_female) <- NULL # Reset rownames
+corr_female[["variable1"]] <- as.character(corr_female[["variable1"]]) # Remove factors
+corr_female[["variable2"]] <- as.character(corr_female[["variable2"]]) # Remove factors
+drops <- c("rse", "fisher_r", "fisher_rse", "fmi", "t", "lower95", "upper95") # Select unnecessary columns to remove
+corr_female <- corr_female[ , !(names(corr_female) %in% drops)] # Remove unnecessary columns
+## Calculate BayesFactors
+# Select data
+Dataset <- mice::complete(femaleData, action = "long")
+colnames(Dataset)[1] <- "imp" # Rename imp column
+drops <- c(".id") # Select unnecessary columns to remove
+Dataset <- Dataset[ , !(names(Dataset) %in% drops)] # Remove unnecessary columns
+# Initialize variables
+m <- SET_CFC.outl.del.imp$m # Number of imputed datasets
+corrBF <- matrix(NA, nrow = nrow(corr_female), ncol = m) # Matrix to put the BayesFactors per imputed dataset
+n.obs <- matrix(NA, nrow = nrow(corr_female), ncol = m) # Matrix to put the number of observations
+correst <- matrix(NA, nrow = nrow(corr_female), ncol = m) # Matrix to put the variance of the variables per imputed dataset
+est <- matrix(NA, nrow = nrow(corr_female), ncol = 1) # Matrix to put the pooled estimates
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed datasets
+  subdata <- Dataset %>% filter(imp == j) %>% select(-imp) %>% as.matrix() # Select imputed dataset
+  for (i in 1:nrow(corr_female)) { # For all variables in the data
+    BF <- correlationBF(y = subdata[, corr_female[i, "variable1"]], x = subdata[, corr_female[i, "variable2"]]) # Calculate BayesFactor
+    corrBF[i, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactor
+    n.obs[i, j] <- length(subdata[, corr_female[i, "variable1"]]) # Calculate sample size
+    correst[i, j] <- mean( c(var(subdata[, corr_female[i, "variable1"]]), var(subdata[, corr_female[i, "variable2"]])) ) / n.obs[i, j] # The standard error of the estimate (necessary for pooling)
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:nrow(corr_female)) { # For every variable
+  est[i, 1] <- pool.scalar(corrBF[i, ], correst[i, ], n = n.obs[i,], k = 1)[["qbar"]] %>% unlist() %>% round(3)
+}
+# Add bayes factors to dataframe
+corr_female[, "BF"] <- est
+# Add sex to dataframe
+corr_female[, "Sex"] <- "Female"
+## Save to ultimate dataframe
+corrs <- rbind(corrs, corr_female)
+
+
+# Add column with Bayes factor interpretation
+corrs[, "BF.evidence"] <- sapply(corrs$BF, function(x) BF.evidence(x)) # Add column with interpretation
+# Do fdr-correction
+corrs[, "p.value.adj"] <- p.adjust(corrs[, "p"], method = "fdr", n = nrow(corrs))
+# Check significance
+corrs[, "p.adj.sig"] <- sapply(corrs[, "p.value.adj"], function(x) p.value.sig(x)) # Corrected
+corrs[, "p.value.sig"] <- sapply(corrs[, "p"], function(x) p.value.sig(x)) # Uncorrected
+# Add Cohen's d
+rho <- corrs[, "r"] # Extract rho
+d <-  r2d(rho) # Calculate Cohen's d from rho
+corrs$cohen.d <- abs(d) # Put the absolute of Cohen's d in dataframe
+corrs$cohen.d.mag <- sapply(corrs$cohen.d, function(x) cohen.d.magnitude(x)) # Add column with magnitude of cohen's d
 # Order based on p-value
-corr <- corr %>% arrange(p)
+corrs <- corrs %>% arrange(p)
 
 ## Save results
 # base
-write.xlsx(corr, "Correlations_EnglishCompetence.xlsx")
+write.xlsx(corrs, "Correlations_EnglishCompetence.xlsx")
 
 
 ## Remove temporary variables
+remove(maleData)
+remove(femaleData)
 remove(corr)
+remove(corr_female)
+remove(corr_male)
+remove(corrs)
 remove(p.value.sig)
 remove(subdata)
 remove(d)
@@ -4125,7 +4225,6 @@ library(reshape2) # For melt function
 library(tidyr) # For spread function
 library(miceadds) # Multiple imputation correlation
 
-### Frontal PAC
 ## Create correlation matrix
 data <- SET_CFC.outl.del.imp %$% 
   cbind.data.frame(RS_Frontal_Avg_dPAC_Z, react_Frontal_Avg_dPAC_Z,
@@ -5044,6 +5143,244 @@ dev.off()
 remove(Fig1, Fig2)
 remove(data)
 remove(corr)
+
+
+# Heatmap correlations per LSAS group (exloratory) -----------------------------------------------------
+## Packages
+library(ggplot2) # For plotting
+library(magrittr) # For piping
+library(dplyr) # For data manipulation
+library(reshape2) # For melt function
+library(tidyr) # For spread function
+library(miceadds) # Multiple imputation correlation
+library(grid) # To organize multiple subplots in one large plot
+library(gridBase) # To organize multiple subplots in one large plot
+library(gridExtra) # To organize multiple subplots in one large plot
+
+### Low LSAS
+## Select subset
+lowData <- subset_datlist(SET_CFC.outl.del.imp, 
+                          subset = SET_CFC.outl.del.imp[[1]][["LSAS_Split"]] == "Low",
+                          select=c("RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
+                                   "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
+                                   "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
+                                   "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
+                                   "LSAS", "anx.react", 
+                                   "PEP.2", "pep.react",
+                                   "RSA.2", "rsa.react",
+                                   "RR.2", "rr.react",
+                                   "Cortisol.1.log", "cort.react"),
+                          toclass="mids")
+
+
+# Correlation coefficients
+corr <- micombine.cor(mi.res = lowData) # Calculate correlation
+cormat <- attr(corr,"r_matrix") # Extract matrix
+cormat <- cormat %>% round(2) # Round values
+# Set the variable names to be more plot-readable
+colnames(cormat) <- c("Frontal baseline PAC", "Frontal PAC reactivity",
+                      "Parietal baseline PAC", "Parietal PAC reactivity",
+                      "Frontal baseline AAC", "Frontal AAC reactivity",
+                      "Parietal baseline AAC", "Parietal AAC reactivity",
+                      "Trait social anxiety", "State anxiety reactivity",
+                      "Baseline PEP", "PEP reactivity", 
+                      "Baseline RSA", "RSA reactivity", 
+                      "Baseline RR", "RR reactivity", 
+                      "Baseline cortisol", "Cortisol reactivity")
+rownames(cormat) <- c("Frontal baseline PAC", "Frontal PAC reactivity",
+                      "Parietal baseline PAC", "Parietal PAC reactivity",
+                      "Frontal baseline AAC", "Frontal AAC reactivity",
+                      "Parietal baseline AAC", "Parietal AAC reactivity",
+                      "Trait social anxiety", "State anxiety reactivity",
+                      "Baseline PEP", "PEP reactivity", 
+                      "Baseline RSA", "RSA reactivity", 
+                      "Baseline RR", "RR reactivity", 
+                      "Baseline cortisol", "Cortisol reactivity")
+# Remove everything under the diagonal
+cormat[lower.tri(cormat, diag = TRUE)] <- NA
+# Melt the correlation matrix
+melted_cormat <- melt(cormat, na.rm = TRUE)
+rownames(melted_cormat) <- NULL # Reset rownames
+
+# Extract p-values to highlight the significant correlations
+cormat_p <- corr # Save the correlation results
+cormat_p <- select(cormat_p, c(variable1, variable2, p)) # Select only the variables names and p-values
+cormat_p <- spread(cormat_p, key = variable1, value = p) %>% as.matrix() # Reshape from long to wide format
+rownames(cormat_p) <- cormat_p[, 1] # Set first variable as rownames
+cormat_p <- cormat_p[, -1] # Remove first variable
+# Reorder into the same order as the cormat
+ordering <- factor(colnames(cormat_p), levels = c("RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
+                                                  "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
+                                                  "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
+                                                  "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
+                                                  "LSAS", "anx.react",
+                                                  "PEP.2", "pep.react",
+                                                  "RSA.2", "rsa.react",
+                                                  "RR.2", "rr.react",
+                                                  "Cortisol.1.log", "cort.react"))
+cormat_p <- cormat_p [order(ordering), # Set order
+                      order(ordering)]
+cormat_p[lower.tri(cormat_p, diag = TRUE)] <- NA # Remove everything under the diagonal
+melted_cormat_p <- melt(cormat_p, na.rm = TRUE) # Melt the correlation matrix
+rownames(melted_cormat_p) <- NULL # Reset rownames
+melted_cormat_p$value <- as.numeric(levels(melted_cormat_p$value))[melted_cormat_p$value] # Make numeric
+melted_cormat$value.sig <- melted_cormat$value # Create new variable that will contain only significant correlation coefficients
+melted_cormat$value.nonsig <- melted_cormat$value # Create new variable that will contain only non-significant correlation coefficients
+melted_cormat <- melted_cormat %>% mutate(value.sig = replace(value.sig, melted_cormat_p$value > .05, NA)) # Make NA the correlation coefficients with non-significant p-values
+melted_cormat <- melted_cormat %>% mutate(value.nonsig = replace(value.nonsig, melted_cormat_p$value <= .05, NA)) # Make NA the correlation coefficients with significant p-values
+
+
+## Plot correlation matrix heatmap
+# To save high-res figure
+tiff("Heatmap_LSAS_CFC.tiff", width = 50, height = 25, units = "cm", res = 300)
+# Plot
+ggheatmap_low <- ggplot(melted_cormat, aes(Var1, Var2, fill = value)) + # Use melted correlation matrix
+  ggtitle("Correlations in low trait anxiety") +
+  geom_tile(color = "white") + # White background
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Pearson\nCorrelation") + # Fill colours
+  theme_minimal() + # minimal theme
+  theme(title = element_text(vjust = 1, size = 14), # Make the title bigger and move to the right
+        axis.text.x = element_text(angle = 90, size = 12), # Angle the x-axis labels 90 degrees and make bigger
+        axis.text.y = element_text(size = 12), # Make y-axis labels bigger
+        axis.title.x = element_blank(), # Remove 'Var' from the x-axis
+        axis.title.y = element_blank(), # Remove 'Var' from the y-axis
+        panel.grid.major = element_blank(), # Remove gridlines
+        panel.border = element_blank(), # Remove border
+        panel.background = element_blank(), # Remove background
+        axis.ticks = element_blank(), # Remove axis ticks
+        legend.justification = c("right", "bottom"),
+        legend.position = c(1, 0)) + 
+  scale_x_discrete(position = "top") + # Put the x-axis on top of the plot
+  coord_fixed() + # For the tiles to be square
+  #geom_text(aes(Var1, Var2, label = value), color = "black", size = 4) + # Add correlation coefficients
+  geom_text(aes(Var1, Var2, label = value.nonsig), color = "black", size = 3.5) + # Add correlation coefficients
+  geom_text(aes(Var1, Var2, label = value.sig), color = "black", size = 3.5, fontface = "bold") + # Add correlation coefficients
+  geom_rect(mapping=aes(xmin=0.5, xmax=8.5, ymin=17.5, ymax=7.5), fill = NA, color="red", size = 1) # Add red rectangle around CFC - stress responses correlations
+# Print the heatmap
+print(ggheatmap_low)
+
+
+### High LSAS
+## Select subset
+highData <- subset_datlist(SET_CFC.outl.del.imp, 
+                           subset = SET_CFC.outl.del.imp[[1]][["LSAS_Split"]] == "High",
+                           select=c("RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
+                                    "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
+                                    "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
+                                    "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
+                                    "LSAS", "anx.react", 
+                                    "PEP.2", "pep.react",
+                                    "RSA.2", "rsa.react",
+                                    "RR.2", "rr.react",
+                                    "Cortisol.1.log", "cort.react"),
+                           toclass="mids")
+
+
+# Correlation coefficients
+corr <- micombine.cor(mi.res = highData) # Calculate correlation
+cormat <- attr(corr,"r_matrix") # Extract matrix
+cormat <- cormat %>% round(2) # Round values
+# Set the variable names to be more plot-readable
+colnames(cormat) <- c("Frontal baseline PAC", "Frontal PAC reactivity",
+                      "Parietal baseline PAC", "Parietal PAC reactivity",
+                      "Frontal baseline AAC", "Frontal AAC reactivity",
+                      "Parietal baseline AAC", "Parietal AAC reactivity",
+                      "Trait social anxiety", "State anxiety reactivity",
+                      "Baseline PEP", "PEP reactivity", 
+                      "Baseline RSA", "RSA reactivity", 
+                      "Baseline RR", "RR reactivity", 
+                      "Baseline cortisol", "Cortisol reactivity")
+rownames(cormat) <- c("Frontal baseline PAC", "Frontal PAC reactivity",
+                      "Parietal baseline PAC", "Parietal PAC reactivity",
+                      "Frontal baseline AAC", "Frontal AAC reactivity",
+                      "Parietal baseline AAC", "Parietal AAC reactivity",
+                      "Trait social anxiety", "State anxiety reactivity",
+                      "Baseline PEP", "PEP reactivity", 
+                      "Baseline RSA", "RSA reactivity", 
+                      "Baseline RR", "RR reactivity", 
+                      "Baseline cortisol", "Cortisol reactivity")
+# Remove everything under the diagonal
+cormat[lower.tri(cormat, diag = TRUE)] <- NA
+# Melt the correlation matrix
+melted_cormat <- melt(cormat, na.rm = TRUE)
+rownames(melted_cormat) <- NULL # Reset rownames
+
+# Extract p-values to highlight the significant correlations
+cormat_p <- corr # Save the correlation results
+cormat_p <- select(cormat_p, c(variable1, variable2, p)) # Select only the variables names and p-values
+cormat_p <- spread(cormat_p, key = variable1, value = p) %>% as.matrix() # Reshape from long to wide format
+rownames(cormat_p) <- cormat_p[, 1] # Set first variable as rownames
+cormat_p <- cormat_p[, -1] # Remove first variable
+# Reorder into the same order as the cormat
+ordering <- factor(colnames(cormat_p), levels = c("RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
+                                                  "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
+                                                  "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
+                                                  "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
+                                                  "LSAS", "anx.react",
+                                                  "PEP.2", "pep.react",
+                                                  "RSA.2", "rsa.react",
+                                                  "RR.2", "rr.react",
+                                                  "Cortisol.1.log", "cort.react"))
+cormat_p <- cormat_p [order(ordering), # Set order
+                      order(ordering)]
+cormat_p[lower.tri(cormat_p, diag = TRUE)] <- NA # Remove everything under the diagonal
+melted_cormat_p <- melt(cormat_p, na.rm = TRUE) # Melt the correlation matrix
+rownames(melted_cormat_p) <- NULL # Reset rownames
+melted_cormat_p$value <- as.numeric(levels(melted_cormat_p$value))[melted_cormat_p$value] # Make numeric
+melted_cormat$value.sig <- melted_cormat$value # Create new variable that will contain only significant correlation coefficients
+melted_cormat$value.nonsig <- melted_cormat$value # Create new variable that will contain only non-significant correlation coefficients
+melted_cormat <- melted_cormat %>% mutate(value.sig = replace(value.sig, melted_cormat_p$value > .05, NA)) # Make NA the correlation coefficients with non-significant p-values
+melted_cormat <- melted_cormat %>% mutate(value.nonsig = replace(value.nonsig, melted_cormat_p$value <= .05, NA)) # Make NA the correlation coefficients with significant p-values
+
+
+## Plot correlation matrix heatmap
+# Plot
+ggheatmap_high <- ggplot(melted_cormat, aes(Var1, Var2, fill = value)) + # Use melted correlation matrix
+  ggtitle("Correlations in high trait anxiety") +
+  geom_tile(color = "white") + # White background
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Pearson\nCorrelation") + # Fill colours
+  theme_minimal() + # minimal theme
+  theme(title = element_text(vjust = 1, size = 14), # Make the title bigger and move to the right
+        axis.text.x = element_text(angle = 90, size = 12), # Angle the x-axis labels 90 degrees and make bigger
+        axis.text.y = element_text(size = 12), # Make y-axis labels bigger
+        axis.title.x = element_blank(), # Remove 'Var' from the x-axis
+        axis.title.y = element_blank(), # Remove 'Var' from the y-axis
+        panel.grid.major = element_blank(), # Remove gridlines
+        panel.border = element_blank(), # Remove border
+        panel.background = element_blank(), # Remove background
+        axis.ticks = element_blank(), # Remove axis ticks
+        legend.justification = c("right", "bottom"),
+        legend.position = c(1, 0)) + 
+  scale_x_discrete(position = "top") + # Put the x-axis on top of the plot
+  coord_fixed() + # For the tiles to be square
+  #geom_text(aes(Var1, Var2, label = value), color = "black", size = 4) + # Add correlation coefficients
+  geom_text(aes(Var1, Var2, label = value.nonsig), color = "black", size = 3.5) + # Add correlation coefficients
+  geom_text(aes(Var1, Var2, label = value.sig), color = "black", size = 3.5, fontface = "bold") + # Add correlation coefficients
+  geom_rect(mapping=aes(xmin=0.5, xmax=8.5, ymin=17.5, ymax=7.5), fill = NA, color="red", size = 1) # Add red rectangle around CFC - stress responses correlations
+# Print the heatmap
+print(ggheatmap_high)
+
+# Arrange plots side-by-side
+grid.arrange(ggheatmap_low, ggheatmap_high, nrow = 1)
+# Print Figure
+dev.off()
+
+## Remove unnecessary variables
+remove(lowData)
+remove(highData)
+remove(corr)
+remove(cormat)
+remove(cormat_p)
+remove(melted_cormat)
+remove(melted_cormat_p)
+remove(ggheatmap_low)
+remove(ggheatmap_high)
+remove(ordering)
+
 
 
 # Sig area under the curve (exploratory) ----------------------------------------------------------
