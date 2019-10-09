@@ -773,7 +773,7 @@ data <- SET_CFC %>% select("Subject", "RS_Frontal_Avg_dPAC_Z", "react_Frontal_Av
                            "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                            "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                            "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                           "LSAS", "anx.react",
+                           "LSAS", "Anx.1", "anx.react",
                            "PEP.2", "pep.react",
                            "RSA.2", "rsa.react",
                            "RR.2", "rr.react",
@@ -836,7 +836,7 @@ if (nrow(t.table1) > 0 | nrow(t.table2) > 0) {
   rownames(t.table) <- NULL # Reset rownames
   
   ## Adjust p-values with bonferroni-correction
-  p.adj <- p.adjust(t.table[, "p.value"], method = "bonferroni", n = length(t.table[, "p.value"])) # Do fdr-correction
+  p.adj <- p.adjust(t.table[, "p.value"], method = "bonferroni", n = length(t.table[, "p.value"])) # Do correction
   t.table[, "p.value.adj"] <- p.adj # Add adjusted p-values into the dataframe with all results
   
   # Save new table with only significant variables
@@ -850,7 +850,8 @@ if (nrow(t.table1) > 0 | nrow(t.table2) > 0) {
   # Delete the outliers
   SET_CFC.outl.del <- SET_CFC
   for (i in 1:nrow(t.table.sig)) {
-    SET_CFC.outl.del[t.table.sig[i, "subject.number"], t.table.sig[i, "var"] ] <- NA
+    subj <- which(SET_CFC.outl.del[, "Subject"] == t.table.sig[i, "subject.number"]) # Get the rownumber of the outlier subject
+    SET_CFC.outl.del[subj, t.table.sig[i, "var"] ] <- NA # Set the outlier to NA
   }
   
 } else {
@@ -872,6 +873,7 @@ remove(data)
 remove(t.table.sig)
 remove(i)
 remove(num.outl)
+remove(subj)
 
 
 # Median split trait social anxiety (exploratory) ------------------------------------------------------------
@@ -934,16 +936,6 @@ meth <- make.method(SET_CFC.outl.del) # Complete variables will automatically be
 meth["Progesterone"]<- ""
 meth["AveragelengthMCs"]<- ""
 meth["OvulationTests"]<- ""
-
-# Do not predict early/late anticipation EEG variables.
-meth["EarlyAnticip_Frontal_Avg_dPAC_Z"]<- ""
-meth["EarlyAnticip_Parietal_Avg_dPAC_Z"]<- ""
-meth["EarlyAnticip_Frontal_Avg_AAC_R"]<- ""
-meth["EarlyAnticip_Parietal_Avg_AAC_R"]<- ""
-meth["LateAnticip_Frontal_Avg_dPAC_Z"]<- ""
-meth["LateAnticip_Parietal_Avg_dPAC_Z"]<- ""
-meth["LateAnticip_Frontal_Avg_AAC_R"]<- ""
-meth["LateAnticip_Parietal_Avg_AAC_R"]<- ""
 
 # No passive imputation for complex variables
 meth["frontal_PAC.auc"]<- ""
@@ -1883,7 +1875,7 @@ if (misobs > 0) { # Check whether there is any missing data
 
 ## Check new data
 # Complete imputed data into new variable
-long.imp.extra <- complete(SET_CFC.outl.del.imp.extra, action='long', include=FALSE)
+long.imp.extra <- mice::complete(SET_CFC.outl.del.imp.extra, action='long', include=FALSE)
 long.imp.extra <- long.imp.extra %$% cbind.data.frame(frontal_PAC.auc, 
                                                       parietal_PAC.auc,
                                                       frontal_AAC.auc,

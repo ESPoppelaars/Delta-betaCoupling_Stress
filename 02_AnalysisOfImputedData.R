@@ -18,7 +18,7 @@ data <- select(data, c(".imp", "RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_
                        "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                        "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                        "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                       "LSAS", "anx.react",
+                       "LSAS", "Anx.1", "anx.react",
                        "PEP.2", "pep.react",
                        "RSA.2", "rsa.react",
                        "RR.2", "rr.react",
@@ -105,7 +105,7 @@ n.obs <- function(x) {sum(complete.cases(na.omit(x)))} # Calculates the number o
 se <- function(x) {sqrt(var(x)/length(x))} # Calculates the standard error of the mean
 # Calculate descriptives for all vars and all imputed datasets
 for (i in 1:m) { # For all imputed datasets
-  Data <- complete(SET_CFC.outl.del.imp, i) %>% select_if(is.numeric) # Select numeric variables of current dataset
+  Data <- mice::complete(SET_CFC.outl.del.imp, i) %>% select_if(is.numeric) # Select numeric variables of current dataset
   for (j in 1:nvar) { # For all variables in the data
     data <- Data[, j] %>% na.omit() # Select currect variable without NA's
     Q[i, j, 1] <- mean(data) # Mean
@@ -142,8 +142,8 @@ U <- array(NA,dim=c(m,nvar,length(label))) # Three-dimensional matrix to put the
 est <- matrix(NA, nrow = I(nfunc*length(label)), ncol = nvar) # Matrix to put the pooled estimates
 # Calculate descriptives for all vars and all imputed datasets for men and women separately
 for (i in 1:m) { # For all imputed datasets
-  Data1 <- subset(complete(SET_CFC.outl.del.imp, i), Sex == label[1]) %>% select_if(is.numeric)  # Select numeric variables of current dataset for men
-  Data2 <- subset(complete(SET_CFC.outl.del.imp, i), Sex == label[2]) %>% select_if(is.numeric)  # Select numeric variables of current dataset for women
+  Data1 <- subset(mice::complete(SET_CFC.outl.del.imp, i), Sex == label[1]) %>% select_if(is.numeric)  # Select numeric variables of current dataset for men
+  Data2 <- subset(mice::complete(SET_CFC.outl.del.imp, i), Sex == label[2]) %>% select_if(is.numeric)  # Select numeric variables of current dataset for women
   for (j in 1:nvar) { # For all variables in the data
     data1 <- Data1[, j] %>% na.omit() # Select currect variable without NA's for men
     data2 <- Data2[, j] %>% na.omit # Select currect variable without NA's for women
@@ -191,8 +191,8 @@ U <- array(NA,dim=c(m,nvar,length(label))) # Three-dimensional matrix to put the
 est <- matrix(NA, nrow = I(nfunc*length(label)), ncol = nvar) # Matrix to put the pooled estimates
 # Calculate descriptives for all vars and all imputed datasets for low LSAS and high LSAS separately
 for (i in 1:m) { # For all imputed datasets
-  Data1 <- subset(complete(SET_CFC.outl.del.imp, i), LSAS_Split == label[1]) %>% select_if(is.numeric)  # Select numeric variables of current dataset for low LSAS
-  Data2 <- subset(complete(SET_CFC.outl.del.imp, i), LSAS_Split == label[2]) %>% select_if(is.numeric)  # Select numeric variables of current dataset for high LSAS
+  Data1 <- subset(mice::complete(SET_CFC.outl.del.imp, i), LSAS_Split == label[1]) %>% select_if(is.numeric)  # Select numeric variables of current dataset for low LSAS
+  Data2 <- subset(mice::complete(SET_CFC.outl.del.imp, i), LSAS_Split == label[2]) %>% select_if(is.numeric)  # Select numeric variables of current dataset for high LSAS
   for (j in 1:nvar) { # For all variables in the data
     data1 <- Data1[, j] %>% na.omit() # Select currect variable without NA's for low LSAS
     data2 <- Data2[, j] %>% na.omit # Select currect variable without NA's for high LSAS
@@ -2642,6 +2642,7 @@ source('BF.evidence.R') # Custom function to check the interpretation of Bayes F
 data <- SET_CFC.outl.del.imp %$% 
   cbind.data.frame(Sex, 
                    LSAS,
+                   Anx.1, 
                    anx.react,
                    PEP.2, 
                    pep.react, 
@@ -2815,7 +2816,7 @@ corr <- micombine.cor(mi.res = SET_CFC.outl.del.imp, variables =
                           "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                           "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                           "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                          "LSAS", "anx.react",
+                          "LSAS", "Anx.1", "anx.react",
                           "RSA.2", "rsa.react",
                           "RR.2", "rr.react",
                           "PEP.2", "pep.react",
@@ -2837,7 +2838,7 @@ Dataset <- select(Dataset, c(".imp", "Sex", "RS_Frontal_Avg_dPAC_Z", "react_Fron
                              "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                              "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                              "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                             "LSAS", "anx.react",
+                             "LSAS", "Anx.1", "anx.react",
                              "RSA.2", "rsa.react",
                              "RR.2", "rr.react",
                              "PEP.2", "pep.react",
@@ -3424,7 +3425,7 @@ corr <- micombine.cor(mi.res = SET_CFC.outl.del.imp, variables =
                           "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                           "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                           "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                          "LSAS", "anx.react",
+                          "LSAS", "Anx.1", "anx.react",
                           "PEP.2", "pep.react",
                           "RSA.2", "rsa.react",
                           "RR.2", "rr.react",
@@ -3448,7 +3449,7 @@ Dataset <- select(Dataset, c(".imp", "RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg
                              "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                              "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                              "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                             "LSAS", "anx.react",
+                             "LSAS", "Anx.1", "anx.react",
                              "PEP.2", "pep.react",
                              "RSA.2", "rsa.react",
                              "RR.2", "rr.react",
@@ -3606,7 +3607,7 @@ maleData <- subset_datlist(SET_CFC.outl.del.imp,
                                 "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                                 "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                                 "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                                "LSAS", "anx.react",
+                                "LSAS", "Anx.1", "anx.react",
                                 "PEP.2", "pep.react",
                                 "RSA.2", "rsa.react",
                                 "RR.2", "rr.react",
@@ -3737,7 +3738,7 @@ femaleData <- subset_datlist(SET_CFC.outl.del.imp,
                                     "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                                     "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                                     "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                                    "LSAS", "anx.react",
+                                    "LSAS", "Anx.1", "anx.react",
                                     "PEP.2", "pep.react",
                                     "RSA.2", "rsa.react",
                                     "RR.2", "rr.react",
@@ -3924,7 +3925,7 @@ lowData <- subset_datlist(SET_CFC.outl.del.imp,
                                    "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                                    "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                                    "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                                   "LSAS", "anx.react",
+                                   "LSAS", "Anx.1", "anx.react",
                                    "PEP.2", "pep.react",
                                    "RSA.2", "rsa.react",
                                    "RR.2", "rr.react",
@@ -4055,7 +4056,7 @@ highData <- subset_datlist(SET_CFC.outl.del.imp,
                                     "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                                     "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                                     "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                                    "LSAS", "anx.react",
+                                    "LSAS", "Anx.1", "anx.react",
                                     "PEP.2", "pep.react",
                                     "RSA.2", "rsa.react",
                                     "RR.2", "rr.react",
@@ -4231,7 +4232,7 @@ data <- SET_CFC.outl.del.imp %$%
                    RS_Parietal_Avg_dPAC_Z, react_Parietal_Avg_dPAC_Z,
                    RS_Frontal_Avg_AAC_R, react_Frontal_Avg_AAC_R,
                    RS_Parietal_Avg_AAC_R, react_Parietal_Avg_AAC_R,
-                   LSAS, anx.react, 
+                   LSAS, Anx.1, anx.react, 
                    PEP.2, pep.react,
                    RSA.2, rsa.react,
                    RR.2, rr.react,
@@ -4246,7 +4247,8 @@ colnames(cormat) <- c("Frontal baseline PAC", "Frontal PAC reactivity",
                       "Parietal baseline PAC", "Parietal PAC reactivity",
                       "Frontal baseline AAC", "Frontal AAC reactivity",
                       "Parietal baseline AAC", "Parietal AAC reactivity",
-                      "Trait social anxiety", "State anxiety reactivity",
+                      "Trait social anxiety", 
+                      "Baseline state anxiety", "State anxiety reactivity",
                       "Baseline PEP", "PEP reactivity", 
                       "Baseline RSA", "RSA reactivity", 
                       "Baseline RR", "RR reactivity", 
@@ -4255,7 +4257,8 @@ rownames(cormat) <- c("Frontal baseline PAC", "Frontal PAC reactivity",
                       "Parietal baseline PAC", "Parietal PAC reactivity",
                       "Frontal baseline AAC", "Frontal AAC reactivity",
                       "Parietal baseline AAC", "Parietal AAC reactivity",
-                      "Trait social anxiety", "State anxiety reactivity",
+                      "Trait social anxiety", 
+                      "Baseline state anxiety", "State anxiety reactivity",
                       "Baseline PEP", "PEP reactivity", 
                       "Baseline RSA", "RSA reactivity", 
                       "Baseline RR", "RR reactivity", 
@@ -4277,7 +4280,7 @@ ordering <- factor(colnames(cormat_p), levels = c("RS_Frontal_Avg_dPAC_Z", "reac
                                                   "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                                                   "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                                                   "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                                                  "LSAS", "anx.react",
+                                                  "LSAS", "Anx.1", "anx.react",
                                                   "PEP.2", "pep.react",
                                                   "RSA.2", "rsa.react",
                                                   "RR.2", "rr.react",
@@ -4321,7 +4324,7 @@ ggheatmap <- ggplot(melted_cormat, aes(Var1, Var2, fill = value)) + # Use melted
   #geom_text(aes(Var1, Var2, label = value), color = "black", size = 4) + # Add correlation coefficients
   geom_text(aes(Var1, Var2, label = value.nonsig), color = "black", size = 3.5) + # Add correlation coefficients
   geom_text(aes(Var1, Var2, label = value.sig), color = "black", size = 3.5, fontface = "bold") + # Add correlation coefficients
-  geom_rect(mapping=aes(xmin=0.5, xmax=8.5, ymin=17.5, ymax=7.5), fill = NA, color="red", size = 1) # Add red rectangle around CFC - stress responses correlations
+  geom_rect(mapping=aes(xmin=0.5, xmax=8.5, ymin=18.5, ymax=7.5), fill = NA, color="red", size = 1) # Add red rectangle around CFC - stress responses correlations
 # Print the heatmap
 print(ggheatmap)
 # Save figure
@@ -4362,7 +4365,7 @@ Data.list <- scale_datlist(Data, # Standardize selected variables
                                         "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                                         "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                                         "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                                        "LSAS", "anx.react",
+                                        "LSAS", "Anx.1", "anx.react",
                                         "PEP.2", "pep.react",
                                         "RSA.2", "rsa.react",
                                         "RR.2", "rr.react",
@@ -4372,7 +4375,7 @@ Data.list <- scale_datlist(Data, # Standardize selected variables
                                          "ZRS_Frontal_Avg_AAC_R", "Zreact_Frontal_Avg_AAC_R",
                                          "ZRS_Parietal_Avg_dPAC_Z", "Zreact_Parietal_Avg_dPAC_Z",
                                          "ZRS_Parietal_Avg_AAC_R", "Zreact_Parietal_Avg_AAC_R",
-                                         "ZLSAS", "Zanx.react",
+                                         "ZLSAS", "ZAnx.1", "Zanx.react",
                                          "ZPEP.2", "Zpep.react",
                                          "ZRSA.2", "Zrsa.react",
                                          "ZRR.2", "Zrr.react",
@@ -4389,7 +4392,7 @@ mod <- 1
 ## Specify dependant variable for partial correlations
 dependant <- "ZRS_Frontal_Avg_dPAC_Z"
 ## Fit model
-fit.lm.imp <- lm.mids(ZRS_Frontal_Avg_dPAC_Z ~ ZLSAS + ZPEP.2 + ZRSA.2 + ZRR.2 + ZCortisol.1.log + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(ZRS_Frontal_Avg_dPAC_Z ~ ZLSAS + ZAnx.1 + ZPEP.2 + ZRSA.2 + ZRR.2 + ZCortisol.1.log + ZEnglishCompetence, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4469,7 +4472,7 @@ mod <- 2
 ## Specify dependant variable for partial correlations
 dependant <- "ZRS_Parietal_Avg_dPAC_Z"
 ## Fit model
-fit.lm.imp <- lm.mids(ZRS_Parietal_Avg_dPAC_Z ~ ZLSAS + ZPEP.2 + ZRSA.2 + ZRR.2 + ZCortisol.1.log + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(ZRS_Parietal_Avg_dPAC_Z ~ ZLSAS + ZAnx.1 + ZPEP.2 + ZRSA.2 + ZRR.2 + ZCortisol.1.log + ZEnglishCompetence, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4548,7 +4551,7 @@ mod <- 3
 ## Specify dependant variable for partial correlations
 dependant <- "ZRS_Frontal_Avg_AAC_R"
 ## Fit model
-fit.lm.imp <- lm.mids(ZRS_Frontal_Avg_AAC_R ~ ZLSAS + ZPEP.2 + ZRSA.2 + ZRR.2 + ZCortisol.1.log + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(ZRS_Frontal_Avg_AAC_R ~ ZLSAS + ZAnx.1 + ZPEP.2 + ZRSA.2 + ZRR.2 + ZCortisol.1.log + ZEnglishCompetence, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4627,7 +4630,7 @@ mod <- 4
 ## Specify dependant variable for partial correlations
 dependant <- "ZRS_Parietal_Avg_AAC_R"
 ## Fit model
-fit.lm.imp <- lm.mids(ZRS_Parietal_Avg_AAC_R ~ ZLSAS + ZPEP.2 + ZRSA.2 + ZRR.2 + ZCortisol.1.log + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(ZRS_Parietal_Avg_AAC_R ~ ZLSAS + ZAnx.1 + ZPEP.2 + ZRSA.2 + ZRR.2 + ZCortisol.1.log + ZEnglishCompetence, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4706,7 +4709,7 @@ mod <- 5
 ## Specify dependant variable for partial correlations
 dependant <- "Zreact_Frontal_Avg_dPAC_Z"
 ## Fit model
-fit.lm.imp <- lm.mids(Zreact_Frontal_Avg_dPAC_Z ~ Zanx.react + Zpep.react + Zrsa.react + Zrr.react + Zcort.react + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(Zreact_Frontal_Avg_dPAC_Z ~ ZLSAS +Zanx.react + Zpep.react + Zrsa.react + Zrr.react + Zcort.react + ZEnglishCompetence, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4785,7 +4788,7 @@ mod <- 6
 ## Specify dependant variable for partial correlations
 dependant <- "Zreact_Parietal_Avg_dPAC_Z"
 ## Fit model
-fit.lm.imp <- lm.mids(Zreact_Parietal_Avg_dPAC_Z ~ Zanx.react + Zpep.react + Zrsa.react + Zrr.react + Zcort.react + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(Zreact_Parietal_Avg_dPAC_Z ~ ZLSAS +Zanx.react + Zpep.react + Zrsa.react + Zrr.react + Zcort.react + ZEnglishCompetence, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4864,7 +4867,7 @@ mod <- 7
 ## Specify dependant variable for partial correlations
 dependant <- "Zreact_Frontal_Avg_AAC_R"
 ## Fit model
-fit.lm.imp <- lm.mids(Zreact_Frontal_Avg_AAC_R ~ Zanx.react + Zpep.react + Zrsa.react + Zrr.react + Zcort.react + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(Zreact_Frontal_Avg_AAC_R ~ ZLSAS + Zanx.react + Zpep.react + Zrsa.react + Zrr.react + Zcort.react + ZEnglishCompetence, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4943,7 +4946,7 @@ mod <- 8
 ## Specify dependant variable for partial correlations
 dependant <- "Zreact_Parietal_Avg_AAC_R"
 ## Fit model
-fit.lm.imp <- lm.mids(Zreact_Parietal_Avg_AAC_R ~ Zanx.react + Zpep.react + Zrsa.react + Zrr.react + Zcort.react + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(Zreact_Parietal_Avg_AAC_R ~ ZLSAS + Zanx.react + Zpep.react + Zrsa.react + Zrr.react + Zcort.react + ZEnglishCompetence, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -5165,7 +5168,7 @@ lowData <- subset_datlist(SET_CFC.outl.del.imp,
                                    "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                                    "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                                    "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                                   "LSAS", "anx.react", 
+                                   "LSAS", "Anx.1", "anx.react", 
                                    "PEP.2", "pep.react",
                                    "RSA.2", "rsa.react",
                                    "RR.2", "rr.react",
@@ -5182,7 +5185,8 @@ colnames(cormat) <- c("Frontal baseline PAC", "Frontal PAC reactivity",
                       "Parietal baseline PAC", "Parietal PAC reactivity",
                       "Frontal baseline AAC", "Frontal AAC reactivity",
                       "Parietal baseline AAC", "Parietal AAC reactivity",
-                      "Trait social anxiety", "State anxiety reactivity",
+                      "Trait social anxiety", 
+                      "Baseline state anxiety", "State anxiety reactivity",
                       "Baseline PEP", "PEP reactivity", 
                       "Baseline RSA", "RSA reactivity", 
                       "Baseline RR", "RR reactivity", 
@@ -5191,7 +5195,8 @@ rownames(cormat) <- c("Frontal baseline PAC", "Frontal PAC reactivity",
                       "Parietal baseline PAC", "Parietal PAC reactivity",
                       "Frontal baseline AAC", "Frontal AAC reactivity",
                       "Parietal baseline AAC", "Parietal AAC reactivity",
-                      "Trait social anxiety", "State anxiety reactivity",
+                      "Trait social anxiety",  
+                      "Baseline state anxiety", "State anxiety reactivity",
                       "Baseline PEP", "PEP reactivity", 
                       "Baseline RSA", "RSA reactivity", 
                       "Baseline RR", "RR reactivity", 
@@ -5213,7 +5218,7 @@ ordering <- factor(colnames(cormat_p), levels = c("RS_Frontal_Avg_dPAC_Z", "reac
                                                   "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                                                   "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                                                   "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                                                  "LSAS", "anx.react",
+                                                  "LSAS", "Anx.1", "anx.react",
                                                   "PEP.2", "pep.react",
                                                   "RSA.2", "rsa.react",
                                                   "RR.2", "rr.react",
@@ -5257,7 +5262,7 @@ ggheatmap_low <- ggplot(melted_cormat, aes(Var1, Var2, fill = value)) + # Use me
   #geom_text(aes(Var1, Var2, label = value), color = "black", size = 4) + # Add correlation coefficients
   geom_text(aes(Var1, Var2, label = value.nonsig), color = "black", size = 3.5) + # Add correlation coefficients
   geom_text(aes(Var1, Var2, label = value.sig), color = "black", size = 3.5, fontface = "bold") + # Add correlation coefficients
-  geom_rect(mapping=aes(xmin=0.5, xmax=8.5, ymin=17.5, ymax=7.5), fill = NA, color="red", size = 1) # Add red rectangle around CFC - stress responses correlations
+  geom_rect(mapping=aes(xmin=0.5, xmax=8.5, ymin=18.5, ymax=7.5), fill = NA, color="red", size = 1) # Add red rectangle around CFC - stress responses correlations
 # Print the heatmap
 print(ggheatmap_low)
 
@@ -5270,7 +5275,7 @@ highData <- subset_datlist(SET_CFC.outl.del.imp,
                                     "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                                     "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                                     "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                                    "LSAS", "anx.react", 
+                                    "LSAS", "Anx.1", "anx.react", 
                                     "PEP.2", "pep.react",
                                     "RSA.2", "rsa.react",
                                     "RR.2", "rr.react",
@@ -5287,7 +5292,8 @@ colnames(cormat) <- c("Frontal baseline PAC", "Frontal PAC reactivity",
                       "Parietal baseline PAC", "Parietal PAC reactivity",
                       "Frontal baseline AAC", "Frontal AAC reactivity",
                       "Parietal baseline AAC", "Parietal AAC reactivity",
-                      "Trait social anxiety", "State anxiety reactivity",
+                      "Trait social anxiety",   
+                      "Baseline state anxiety", "State anxiety reactivity",
                       "Baseline PEP", "PEP reactivity", 
                       "Baseline RSA", "RSA reactivity", 
                       "Baseline RR", "RR reactivity", 
@@ -5296,7 +5302,8 @@ rownames(cormat) <- c("Frontal baseline PAC", "Frontal PAC reactivity",
                       "Parietal baseline PAC", "Parietal PAC reactivity",
                       "Frontal baseline AAC", "Frontal AAC reactivity",
                       "Parietal baseline AAC", "Parietal AAC reactivity",
-                      "Trait social anxiety", "State anxiety reactivity",
+                      "Trait social anxiety",   
+                      "Baseline state anxiety", "State anxiety reactivity",
                       "Baseline PEP", "PEP reactivity", 
                       "Baseline RSA", "RSA reactivity", 
                       "Baseline RR", "RR reactivity", 
@@ -5318,7 +5325,7 @@ ordering <- factor(colnames(cormat_p), levels = c("RS_Frontal_Avg_dPAC_Z", "reac
                                                   "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
                                                   "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
                                                   "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
-                                                  "LSAS", "anx.react",
+                                                  "LSAS", "Anx.1", "anx.react",
                                                   "PEP.2", "pep.react",
                                                   "RSA.2", "rsa.react",
                                                   "RR.2", "rr.react",
@@ -5360,7 +5367,7 @@ ggheatmap_high <- ggplot(melted_cormat, aes(Var1, Var2, fill = value)) + # Use m
   #geom_text(aes(Var1, Var2, label = value), color = "black", size = 4) + # Add correlation coefficients
   geom_text(aes(Var1, Var2, label = value.nonsig), color = "black", size = 3.5) + # Add correlation coefficients
   geom_text(aes(Var1, Var2, label = value.sig), color = "black", size = 3.5, fontface = "bold") + # Add correlation coefficients
-  geom_rect(mapping=aes(xmin=0.5, xmax=8.5, ymin=17.5, ymax=7.5), fill = NA, color="red", size = 1) # Add red rectangle around CFC - stress responses correlations
+  geom_rect(mapping=aes(xmin=0.5, xmax=8.5, ymin=18.5, ymax=7.5), fill = NA, color="red", size = 1) # Add red rectangle around CFC - stress responses correlations
 # Print the heatmap
 print(ggheatmap_high)
 
