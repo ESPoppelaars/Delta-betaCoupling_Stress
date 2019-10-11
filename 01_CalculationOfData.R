@@ -343,422 +343,6 @@ sapply(SET_CFC, class) # Check class again.
 save(SET_CFC, file = "SET_CFC.RData")
 
 
-# Area under the curve ----------------------------------------------------
-
-## Packages
-library(dplyr)
-library(magrittr)
-
-### Select frontal PAC data
-data <- SET_CFC %>% select(RS_Frontal_Avg_dPAC_Z,
-                           Anticip_Frontal_Avg_dPAC_Z,
-                           EarlyRecov_Frontal_Avg_dPAC_Z,
-                           LateRecov_Frontal_Avg_dPAC_Z)
-## Calculate AUC
-# Initialize variables
-obs <- nrow(data) # Number of observations
-t <- as.vector(c(0, 30, 49, 79)) # Time points of each measurement
-auc <- array(NA, dim = c(obs, length(t)-1))
-AUCg <- matrix(NA, nrow = obs, ncol = 1)
-AUC1 <- matrix(NA, nrow = obs, ncol = 1)
-# First part of formula for calculating AUCg
-for (n in 1:obs) {
-  for (i in 1:I(length(t)-1)) {
-    auc[n, i] <- I(data[n, i+1] + data[n, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg[, 1] <- rowSums(auc[, ])
-# Subtract the ground of AUCg to get AUC1
-for (n in 1:obs) {
-  AUC1[n, 1] <- AUCg[n, 1] - I(data[n, 1] * t[length(t)])
-}
-# Add new variable to dataframe
-SET_CFC$frontal_PAC.auc <- AUC1
-
-
-### Select parietal PAC data
-data <- SET_CFC %>% select(RS_Parietal_Avg_dPAC_Z,
-                           Anticip_Parietal_Avg_dPAC_Z,
-                           EarlyRecov_Parietal_Avg_dPAC_Z,
-                           LateRecov_Parietal_Avg_dPAC_Z)
-## Calculate AUC
-# Initialize variables
-obs <- nrow(data) # Number of observations
-t <- as.vector(c(0, 30, 49, 79)) # Time points of each measurement
-auc <- array(NA, dim = c(obs, length(t)-1))
-AUCg <- matrix(NA, nrow = obs, ncol = 1)
-AUC1 <- matrix(NA, nrow = obs, ncol = 1)
-# First part of formula for calculating AUCg
-for (n in 1:obs) {
-  for (i in 1:I(length(t)-1)) {
-    auc[n, i] <- I(data[n, i+1] + data[n, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg[, 1] <- rowSums(auc[, ])
-# Subtract the ground of AUCg to get AUC1
-for (n in 1:obs) {
-  AUC1[n, 1] <- AUCg[n, 1] - I(data[n, 1] * t[length(t)])
-}
-# Add new variable to dataframe
-SET_CFC$parietal_PAC.auc <- AUC1
-
-
-### Select frontal AAC data
-data <- SET_CFC %>% select(RS_Frontal_Avg_AAC_R,
-                           Anticip_Frontal_Avg_AAC_R,
-                           EarlyRecov_Frontal_Avg_AAC_R,
-                           LateRecov_Frontal_Avg_AAC_R)
-## Calculate AUC
-# Initialize variables
-obs <- nrow(data) # Number of observations
-t <- as.vector(c(0, 30, 49, 79)) # Time points of each measurement
-auc <- array(NA, dim = c(obs, length(t)-1))
-AUCg <- matrix(NA, nrow = obs, ncol = 1)
-AUC1 <- matrix(NA, nrow = obs, ncol = 1)
-# First part of formula for calculating AUCg
-for (n in 1:obs) {
-  for (i in 1:I(length(t)-1)) {
-    auc[n, i] <- I(data[n, i+1] + data[n, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg[, 1] <- rowSums(auc[, ])
-# Subtract the ground of AUCg to get AUC1
-for (n in 1:obs) {
-  AUC1[n, 1] <- AUCg[n, 1] - I(data[n, 1] * t[length(t)])
-}
-# Add new variable to dataframe
-SET_CFC$frontal_AAC.auc <- AUC1
-
-
-### Select parietal AAC data
-data <- SET_CFC %>% select(RS_Parietal_Avg_AAC_R,
-                           Anticip_Parietal_Avg_AAC_R,
-                           EarlyRecov_Parietal_Avg_AAC_R,
-                           LateRecov_Parietal_Avg_AAC_R)
-## Calculate AUC
-# Initialize variables
-obs <- nrow(data) # Number of observations
-t <- as.vector(c(0, 30, 49, 79)) # Time points of each measurement
-auc <- array(NA, dim = c(obs, length(t)-1))
-AUCg <- matrix(NA, nrow = obs, ncol = 1)
-AUC1 <- matrix(NA, nrow = obs, ncol = 1)
-# First part of formula for calculating AUCg
-for (n in 1:obs) {
-  for (i in 1:I(length(t)-1)) {
-    auc[n, i] <- I(data[n, i+1] + data[n, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg[, 1] <- rowSums(auc[, ])
-# Subtract the ground of AUCg to get AUC1
-for (n in 1:obs) {
-  AUC1[n, 1] <- AUCg[n, 1] - I(data[n, 1] * t[length(t)])
-}
-# Add new variable to dataframe
-SET_CFC$parietal_AAC.auc <- AUC1
-
-
-### Anxiety
-## AUC
-# Initialize data
-t = as.vector(c(0, 28, 35, 45, 50, 55, 60, 65)) # For VAS
-# Select data
-data <- SET_CFC %$% cbind.data.frame(Anx.1, Anx.2, Anx.3, Anx.4, 
-                                     Anx.5, Anx.6, Anx.7, Anx.8)
-# Initialize variables
-auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
-# First part of formula for calculating AUCg
-for (j in 1:nrow(data)) {
-  for (i in 1:I(length(t)-1)) {
-    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg <- rowSums(auc)
-# Subtract the ground of AUCg to get AUC1
-AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
-for (i in 1:nrow(data)) {
-  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
-}
-# Save into new dataset
-SET_CFC$anx.auc <- AUC1 %>% as.numeric()
-
-
-### Approach motivation
-## AUC
-# Initialize data
-t = as.vector(c(0, 28, 35, 45, 50, 55, 60, 65)) # For VAS
-# Select data
-data <- SET_CFC %$% cbind.data.frame(Appr.1, Appr.2, Appr.3, Appr.4, 
-                                     Appr.5, Appr.6, Appr.7, Appr.8)
-# Initialize variables
-auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
-# First part of formula for calculating AUCg
-for (j in 1:nrow(data)) {
-  for (i in 1:I(length(t)-1)) {
-    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg <- rowSums(auc)
-# Subtract the ground of AUCg to get AUC1
-AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
-for (i in 1:nrow(data)) {
-  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
-}
-# Save into new dataset
-SET_CFC$appr.auc <- AUC1 %>% as.numeric()
-
-
-### Blood pressure
-## AUC
-# Initialize data
-t = as.vector(c(0, 7, 41, 47, 59, 65, 90, 96)) # For BP
-# Select data
-data <- SET_CFC %$% cbind.data.frame(BP.1, BP.2, BP.3, BP.4,
-                                     BP.5, BP.6, BP.7, BP.8)
-# Initialize variables
-auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
-# First part of formula for calculating AUCg
-for (j in 1:nrow(data)) {
-  for (i in 1:I(length(t)-1)) {
-    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg <- rowSums(auc)
-# Subtract the ground of AUCg to get AUC1
-AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
-for (i in 1:nrow(data)) {
-  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
-}
-# Save into new dataset
-SET_CFC$bp.auc <- AUC1 %>% as.numeric()
-
-
-### Heart rate
-## AUC
-# Initialize data
-t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
-# Select data
-data <- SET_CFC %$% cbind.data.frame(HR.1, HR.2, HR.3, HR.4,
-                                     HR.7, HR.8, HR.9, HR.10)
-# Initialize variables
-auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
-# First part of formula for calculating AUCg
-for (j in 1:nrow(data)) {
-  for (i in 1:I(length(t)-1)) {
-    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg <- rowSums(auc)
-# Subtract the ground of AUCg to get AUC1
-AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
-for (i in 1:nrow(data)) {
-  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
-}
-# Save into new dataset
-SET_CFC$hr.auc <- AUC1 %>% as.numeric()
-
-
-### PEP
-## AUC
-# Initialize data
-t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
-# Select data
-data <- SET_CFC %$% cbind.data.frame(PEP.1, PEP.2, PEP.3, PEP.4,
-                                     PEP.7, PEP.8, PEP.9, PEP.10)
-# Initialize variables
-auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
-# First part of formula for calculating AUCg
-for (j in 1:nrow(data)) {
-  for (i in 1:I(length(t)-1)) {
-    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg <- rowSums(auc)
-# Subtract the ground of AUCg to get AUC1
-AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
-for (i in 1:nrow(data)) {
-  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
-}
-# Save into new dataset
-SET_CFC$pep.auc <- AUC1 %>% as.numeric()
-
-
-### Cardiac output
-## AUC
-# Initialize data
-t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
-# Select data
-data <- SET_CFC %$% cbind.data.frame(CO.1, CO.2, CO.3, CO.4,
-                                     CO.7, CO.8, CO.9, CO.10)
-# Initialize variables
-auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
-# First part of formula for calculating AUCg
-for (j in 1:nrow(data)) {
-  for (i in 1:I(length(t)-1)) {
-    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg <- rowSums(auc)
-# Subtract the ground of AUCg to get AUC1
-AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
-for (i in 1:nrow(data)) {
-  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
-}
-# Save into new dataset
-SET_CFC$co.auc <- AUC1 %>% as.numeric()
-
-
-### TPR
-## AUC
-# Initialize data
-t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
-# Select data
-data <- SET_CFC %$% cbind.data.frame(TPR.1, TPR.2, TPR.3, TPR.4,
-                                     TPR.5, TPR.6, TPR.7, TPR.8)
-# Initialize variables
-auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
-# First part of formula for calculating AUCg
-for (j in 1:nrow(data)) {
-  for (i in 1:I(length(t)-1)) {
-    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg <- rowSums(auc)
-# Subtract the ground of AUCg to get AUC1
-AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
-for (i in 1:nrow(data)) {
-  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
-}
-# Save into new dataset
-SET_CFC$tpr.auc <- AUC1 %>% as.numeric()
-
-### TCI
-## AUC
-# Initialize data
-t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
-# Select data
-data <- SET_CFC %$% cbind.data.frame(TCI.1, TCI.2, TCI.3, TCI.4,
-                                     TCI.5, TCI.6, TCI.7, TCI.8)
-# Initialize variables
-auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
-# First part of formula for calculating AUCg
-for (j in 1:nrow(data)) {
-  for (i in 1:I(length(t)-1)) {
-    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg <- rowSums(auc)
-# Subtract the ground of AUCg to get AUC1
-AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
-for (i in 1:nrow(data)) {
-  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
-}
-# Save into new dataset
-SET_CFC$tci.auc <- AUC1 %>% as.numeric()
-
-
-### RSA
-## AUC
-# Initialize data
-t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
-# Select data
-data <- SET_CFC %$% cbind.data.frame(RSA.1, RSA.2, RSA.3, RSA.4,
-                                     RSA.7, RSA.8, RSA.9, RSA.10)
-# Initialize variables
-auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
-# First part of formula for calculating AUCg
-for (j in 1:nrow(data)) {
-  for (i in 1:I(length(t)-1)) {
-    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg <- rowSums(auc)
-# Subtract the ground of AUCg to get AUC1
-AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
-for (i in 1:nrow(data)) {
-  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
-}
-# Save into new dataset
-SET_CFC$rsa.auc <- AUC1 %>% as.numeric()
-
-
-### RR
-## AUC
-# Initialize data
-t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
-# Select data
-data <- SET_CFC %$% cbind.data.frame(RR.1, RR.2, RR.3, RR.4,
-                                     RR.7, RR.8, RR.9, RR.10)
-# Initialize variables
-auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
-# First part of formula for calculating AUCg
-for (j in 1:nrow(data)) {
-  for (i in 1:I(length(t)-1)) {
-    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg <- rowSums(auc)
-# Subtract the ground of AUCg to get AUC1
-AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
-for (i in 1:nrow(data)) {
-  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
-}
-# Save into new dataset
-SET_CFC$rr.auc <- AUC1 %>% as.numeric()
-
-
-### Cortisol
-## AUC
-# Initialize data
-t = as.vector(c(0, 38, 49, 54, 59, 64, 69)) # For hormones
-# For cortisol
-data <- SET_CFC %$% cbind.data.frame(Cortisol.1.log, Cortisol.2.log, Cortisol.3.log, 
-                                 Cortisol.4.log, Cortisol.5.log, Cortisol.6.log, 
-                                 Cortisol.7.log)
-# Initialize variables
-auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
-# First part of formula for calculating AUCg
-for (j in 1:nrow(data)) {
-  for (i in 1:I(length(t)-1)) {
-    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
-  }
-}
-# Second part of formula for calculating AUCg
-AUCg <- rowSums(auc)
-# Subtract the ground of AUCg to get AUC1
-AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
-for (i in 1:nrow(data)) {
-  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
-}
-# Save into new dataset
-SET_CFC$cort.auc <- AUC1 %>% as.numeric()
-
-# Make sure all the recovery variables are of class numeric.
-sapply(SET_CFC, class) # Check class.
-library(dplyr)
-SET_CFC <- SET_CFC %>% mutate_if(funs(class(.) == "matrix"), as.numeric)
-sapply(SET_CFC, class) # Check class again.
-
-### Save dataframe
-save(SET_CFC, file = "SET_CFC.RData")
-
-### Remove temporary variables
-remove(auc, AUC1, AUCg, data, i, j, t, n, obs)
-
-
 # Grubbs outlier calculation (preregistered) ----------------------------------------------
 
 # Packages
@@ -766,6 +350,7 @@ library(outliers) # Grubbs test
 library(magrittr) # Piping
 library(xlsx) # Exporting to Excel
 library(dplyr) # Data manipulation
+
 
 # Load data
 load("SET_CFC.RData")
@@ -809,7 +394,6 @@ t.table1 <- sapply(grub, function(x) {
     subject.number = x$outlier.subject.number,
     p.value = x$p.value)
 })
-
 t.table2 <- sapply(grub2, function(x) {
   c(test = x$method,
     var = x$data.name,
@@ -818,7 +402,7 @@ t.table2 <- sapply(grub2, function(x) {
     p.value = x$p.value)
 })
 
-if (nrow(t.table1) > 0 | nrow(t.table2) > 0) {
+if (nrow(t.table1) > 0 | nrow(t.table2) > 0) { # If there are outliers
   # Save the lower tail results as a dataframe
   t.table1 <- as.data.frame(t.table1)
   t.table1 <- t(t.table1) %>% as.data.frame(stringsAsFactors = FALSE) # Transpose the dataframe
@@ -835,31 +419,240 @@ if (nrow(t.table1) > 0 | nrow(t.table2) > 0) {
   t.table <- rbind.data.frame(t.table1[-c(1:2), ], t.table2[-c(1:2), ])
   rownames(t.table) <- NULL # Reset rownames
   
-  ## Adjust p-values with bonferroni-correction
-  p.adj <- p.adjust(t.table[, "p.value"], method = "bonferroni", n = length(t.table[, "p.value"])) # Do correction
-  t.table[, "p.value.adj"] <- p.adj # Add adjusted p-values into the dataframe with all results
-  
   # Save new table with only significant variables
+  t.table[, "p.value.adj"] <- p.adjust(t.table[, "p.value"], method = "bonferroni", n = nrow(t.table)) # Do fdr-correction
   t.table.sig <- t.table[t.table$p.value.adj <= .05, ]
-  rownames(t.table.sig) <- NULL
+  rownames(t.table.sig) <- NULL # Reset rownames
   write.xlsx(t.table.sig, "outliers_SET_CFC.xlsx")
   
-  # Count the number of unique subject numbers
-  num.outl <- t.table.sig$subject.number %>% unique() %>% length()
-  
-  # Delete the outliers
-  SET_CFC.outl.del <- SET_CFC
+  ## Delete the outliers
+  data <- SET_CFC # Save new dataset
   for (i in 1:nrow(t.table.sig)) {
-    subj <- which(SET_CFC.outl.del[, "Subject"] == t.table.sig[i, "subject.number"]) # Get the rownumber of the outlier subject
-    SET_CFC.outl.del[subj, t.table.sig[i, "var"] ] <- NA # Set the outlier to NA
-  }
-  
-} else {
+    subj <- which(data[, "Subject"] == t.table.sig[i, "subject.number"]) # Get the rownumber of the outlier subject
+    data[subj, t.table.sig[i, "var"] ] <- NA # Set the outlier to NA
+    
+    # Make sure that if reactivity is an outlier, the original variables are also set to NA, and vice versa
+    if (t.table.sig[i, "var"] == "anx.react") {
+      data[subj, c( seq(which(colnames(data)=="Anx.1") , I(which(colnames(data)=="Anx.1")+7)) , 
+                    which(colnames(data)=="anx.recov") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( seq(which(colnames(data)=="Anx.1") , I(which(colnames(data)=="Anx.1")+7)) )]))) {
+      data[subj, c( which(colnames(data)=="anx.react"), which(colnames(data)=="anx.recov") )] <- NA
+    } else if (t.table.sig[i, "var"] == "pep.react") {
+      data[subj, c( seq(which(colnames(data)=="PEP.1") , I(which(colnames(data)=="PEP.1")+7)) , 
+                    which(colnames(data)=="pep.recov") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( seq(which(colnames(data)=="PEP.1") , I(which(colnames(data)=="PEP.1")+7)) )]))) {
+      data[subj, c(which(colnames(data)=="pep.react"), which(colnames(data)=="pep.recov") )] <- NA
+    } else if (t.table.sig[i, "var"] == "rsa.react") {
+      data[subj, c( seq(which(colnames(data)=="RSA.1") , I(which(colnames(data)=="RSA.1")+7)), 
+                    which(colnames(data)=="rsa.recov") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( seq(which(colnames(data)=="RSA.1") , I(which(colnames(data)=="RSA.1")+7)) )]))) {
+      data[subj, c(which(colnames(data)=="rsa.react"), which(colnames(data)=="rsa.recov") )] <- NA
+    } else if (t.table.sig[i, "var"] == "rr.react") {
+      data[subj, c( seq(which(colnames(data)=="RR.1") , I(which(colnames(data)=="RR.1")+7)), 
+                    which(colnames(data)=="rr.recov") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( seq(which(colnames(data)=="RR.1") , I(which(colnames(data)=="RR.1")+7)) )]))) {
+      data[subj, c(which(colnames(data)=="rr.react"), which(colnames(data)=="rr.recov") )] <- NA
+    } else if (t.table.sig[i, "var"] == "cort.react") {
+      data[subj, c( seq(which(colnames(data)=="Cortisol.1") , I(which(colnames(data)=="Cortisol.1")+6)),
+                    seq(which(colnames(data)=="Cortisol.1.log") , I(which(colnames(data)=="Cortisol.1.log")+6)),
+                    which(colnames(data)=="cort.recov") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( seq(which(colnames(data)=="Cortisol.1.log") , I(which(colnames(data)=="Cortisol.1.log")+6)) )]))) {
+      data[subj, c(which(colnames(data)=="cort.react"), 
+                   which(colnames(data)=="cort.recov"),
+                   seq(which(colnames(data)=="Cortisol.1") , I(which(colnames(data)=="Cortisol.1")+6)) )] <- NA
+    } else if (t.table.sig[i, "var"] == "react_Frontal_Avg_dPAC_Z") {
+      data[subj, c( which(colnames(data)=="RS_Frontal_Avg_dPAC_Z") , which(colnames(data)=="Anticip_Frontal_Avg_dPAC_Z"), 
+                    which(colnames(data)=="EarlyRecov_Frontal_Avg_dPAC_Z"), which(colnames(data)=="LateRecov_Frontal_Avg_dPAC_Z"), 
+                    which(colnames(data)=="recov_Frontal_Avg_dPAC_Z") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( which(colnames(data)=="RS_Frontal_Avg_dPAC_Z") , which(colnames(data)=="Anticip_Frontal_Avg_dPAC_Z") , 
+                                                            which(colnames(data)=="EarlyRecov_Frontal_Avg_dPAC_Z") , which(colnames(data)=="LateRecov_Frontal_Avg_dPAC_Z") )]))) {
+      data[subj, c(which(colnames(data)=="react_Frontal_Avg_dPAC_Z"), which(colnames(data)=="recov_Frontal_Avg_dPAC_Z") )] <- NA
+    } else if (t.table.sig[i, "var"] == "react_Parietal_Avg_dPAC_Z") {
+      data[subj, c( which(colnames(data)=="RS_Parietal_Avg_dPAC_Z") , which(colnames(data)=="Anticip_Parietal_Avg_dPAC_Z"), 
+                    which(colnames(data)=="EarlyRecov_Parietal_Avg_dPAC_Z"), which(colnames(data)=="LateRecov_Parietal_Avg_dPAC_Z"), 
+                    which(colnames(data)=="recov_Parietal_Avg_dPAC_Z") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( which(colnames(data)=="RS_Parietal_Avg_dPAC_Z") , which(colnames(data)=="Anticip_Parietal_Avg_dPAC_Z") , 
+                                                            which(colnames(data)=="EarlyRecov_Parietal_Avg_dPAC_Z") , which(colnames(data)=="LateRecov_Parietal_Avg_dPAC_Z") )]))) {
+      data[subj, c(which(colnames(data)=="react_Parietal_Avg_dPAC_Z"), which(colnames(data)=="recov_Parietal_Avg_dPAC_Z") )] <- NA
+    } else if (t.table.sig[i, "var"] == "react_Frontal_Avg_AAC_R") {
+      data[subj, c( which(colnames(data)=="RS_Frontal_Avg_AAC_R") , which(colnames(data)=="Anticip_Frontal_Avg_AAC_R"), 
+                    which(colnames(data)=="EarlyRecov_Frontal_Avg_AAC_R"), which(colnames(data)=="LateRecov_Frontal_Avg_AAC_R"), 
+                    which(colnames(data)=="recov_Frontal_Avg_AAC_R") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( which(colnames(data)=="RS_Frontal_Avg_AAC_R") , which(colnames(data)=="Anticip_Frontal_Avg_AAC_R") , 
+                                                            which(colnames(data)=="EarlyRecov_Frontal_Avg_AAC_R") , which(colnames(data)=="LateRecov_Frontal_Avg_AAC_R") )]))) {
+      data[subj, c(which(colnames(data)=="react_Frontal_Avg_AAC_R"), which(colnames(data)=="recov_Frontal_Avg_AAC_R") )] <- NA
+    } else if (t.table.sig[i, "var"] == "react_Parietal_Avg_AAC_R") {
+      data[subj, c( which(colnames(data)=="RS_Parietal_Avg_AAC_R") , which(colnames(data)=="Anticip_Parietal_Avg_AAC_R"), 
+                    which(colnames(data)=="EarlyRecov_Parietal_Avg_AAC_R"), which(colnames(data)=="LateRecov_Parietal_Avg_AAC_R"), 
+                    which(colnames(data)=="recov_Parietal_Avg_AAC_R") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( which(colnames(data)=="RS_Parietal_Avg_AAC_R") , which(colnames(data)=="Anticip_Parietal_Avg_AAC_R") , 
+                                                            which(colnames(data)=="EarlyRecov_Parietal_Avg_AAC_R") , which(colnames(data)=="LateRecov_Parietal_Avg_AAC_R") )]))) {
+      data[subj, c(which(colnames(data)=="react_Parietal_Avg_AAC_R"), which(colnames(data)=="recov_Parietal_Avg_AAC_R") )] <- NA
+    }
+  } 
+} else { # If there are no outliers
   print("No outliers")
 }
 
+# Create new dataset
+SET_CFC.outl.del <- data
+
 ### Save dataframe
 save(SET_CFC.outl.del, file = "SET_CFC.outl.del.RData")
+
+
+
+### Repeat outlier analysis a second time
+# Load data
+load("SET_CFC.outl.del.RData")
+data <- SET_CFC.outl.del %>% select("Subject", "RS_Frontal_Avg_dPAC_Z", "react_Frontal_Avg_dPAC_Z",
+                           "RS_Frontal_Avg_AAC_R", "react_Frontal_Avg_AAC_R",
+                           "RS_Parietal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z",
+                           "RS_Parietal_Avg_AAC_R", "react_Parietal_Avg_AAC_R",
+                           "LSAS", "Anx.1", "anx.react",
+                           "PEP.2", "pep.react",
+                           "RSA.2", "rsa.react",
+                           "RR.2", "rr.react",
+                           "Cortisol.1.log", "cort.react")
+
+# Check outliers
+grub <- list(NA)
+grub2 <- list(NA)
+for (i in 1:ncol(data)) {
+  if (is.numeric(data[, i])) {
+    # Only complete cases
+    sub <- subset(data[, c(1, i)], complete.cases(data[, i]))
+    # Lower tail
+    grub[[i]] <- grubbs.test(na.omit(data[, i]), type = 10, opposite = TRUE)
+    grub[[i]][["data.name"]] <- colnames(data)[i]
+    grub[[i]][["outlier.subject.number"]] <- sub[which.min(sub[, 2]), "Subject"]
+    # Upper tail
+    grub2[[i]] <- grubbs.test(na.omit(data[, i]), type = 10, opposite = FALSE)
+    grub2[[i]][["data.name"]] <- colnames(data)[i]
+    grub2[[i]][["outlier.subject.number"]] <- sub[which.max(sub[, 2]), "Subject"]
+  } else {
+    grub[[i]] <- NA
+    grub2[[i]] <- NA
+  }
+}
+
+## Put the t-test results in a table
+# Extract results from list
+t.table1 <- sapply(grub, function(x) {
+  c(test = x$method,
+    var = x$data.name,
+    test.stat = x$statistic[["G"]],
+    subject.number = x$outlier.subject.number,
+    p.value = x$p.value)
+})
+t.table2 <- sapply(grub2, function(x) {
+  c(test = x$method,
+    var = x$data.name,
+    test.stat = x$statistic[["G"]],
+    subject.number = x$outlier.subject.number,
+    p.value = x$p.value)
+})
+
+if (nrow(t.table1) > 0 | nrow(t.table2) > 0) { # If there are outliers
+  # Save the lower tail results as a dataframe
+  t.table1 <- as.data.frame(t.table1)
+  t.table1 <- t(t.table1) %>% as.data.frame(stringsAsFactors = FALSE) # Transpose the dataframe
+  t.table1[, 3:5] <- lapply(t.table1[, 3:5], function(x) as.numeric(as.character(x))) %>% 
+    lapply(function(x) round(x, 5)) # Set the numeric columns to numeric and round to 5 decimals
+  t.table1[, "tail"] <- "lower" # Save for which tail the outlier was
+  # Save the upper tail results as a dataframe
+  t.table2 <- as.data.frame(t.table2)
+  t.table2 <- t(t.table2) %>% as.data.frame(stringsAsFactors = FALSE) # Transpose the dataframe
+  t.table2[, 3:5] <- lapply(t.table2[, 3:5], function(x) as.numeric(as.character(x))) %>% 
+    lapply(function(x) round(x, 5)) # Set the numeric columns to numeric and round to 5 decimals
+  t.table2[, "tail"] <- "upper" # Save for which tail the outlier was
+  # Bind together
+  t.table <- rbind.data.frame(t.table1[-c(1:2), ], t.table2[-c(1:2), ])
+  rownames(t.table) <- NULL # Reset rownames
+  
+  # Save new table with only significant variables
+  t.table[, "p.value.adj"] <- p.adjust(t.table[, "p.value"], method = "bonferroni", n = nrow(t.table)) # Do fdr-correction
+  t.table.sig <- t.table[t.table$p.value.adj <= .05, ]
+  rownames(t.table.sig) <- NULL # Reset rownames
+  write.xlsx(t.table.sig, "outliers2_SET_CFC.xlsx")
+  
+  ## Delete the outliers
+  data <- SET_CFC.outl.del # Save new dataset
+  for (i in 1:nrow(t.table.sig)) {
+    subj <- which(data[, "Subject"] == t.table.sig[i, "subject.number"]) # Get the rownumber of the outlier subject
+    data[subj, t.table.sig[i, "var"] ] <- NA # Set the outlier to NA
+    
+    # Make sure that if reactivity is an outlier, the original variables are also set to NA, and vice versa
+    if (t.table.sig[i, "var"] == "anx.react") {
+      data[subj, c( seq(which(colnames(data)=="Anx.1") , I(which(colnames(data)=="Anx.1")+7)) , 
+                    which(colnames(data)=="anx.recov") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( seq(which(colnames(data)=="Anx.1") , I(which(colnames(data)=="Anx.1")+7)) )]))) {
+      data[subj, c( which(colnames(data)=="anx.react"), which(colnames(data)=="anx.recov") )] <- NA
+    } else if (t.table.sig[i, "var"] == "pep.react") {
+      data[subj, c( seq(which(colnames(data)=="PEP.1") , I(which(colnames(data)=="PEP.1")+7)) , 
+                    which(colnames(data)=="pep.recov") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( seq(which(colnames(data)=="PEP.1") , I(which(colnames(data)=="PEP.1")+7)) )]))) {
+      data[subj, c(which(colnames(data)=="pep.react"), which(colnames(data)=="pep.recov") )] <- NA
+    } else if (t.table.sig[i, "var"] == "rsa.react") {
+      data[subj, c( seq(which(colnames(data)=="RSA.1") , I(which(colnames(data)=="RSA.1")+7)), 
+                    which(colnames(data)=="rsa.recov") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( seq(which(colnames(data)=="RSA.1") , I(which(colnames(data)=="RSA.1")+7)) )]))) {
+      data[subj, c(which(colnames(data)=="rsa.react"), which(colnames(data)=="rsa.recov") )] <- NA
+    } else if (t.table.sig[i, "var"] == "rr.react") {
+      data[subj, c( seq(which(colnames(data)=="RR.1") , I(which(colnames(data)=="RR.1")+7)), 
+                    which(colnames(data)=="rr.recov") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( seq(which(colnames(data)=="RR.1") , I(which(colnames(data)=="RR.1")+7)) )]))) {
+      data[subj, c(which(colnames(data)=="rr.react"), which(colnames(data)=="rr.recov") )] <- NA
+    } else if (t.table.sig[i, "var"] == "cort.react") {
+      data[subj, c( seq(which(colnames(data)=="Cortisol.1") , I(which(colnames(data)=="Cortisol.1")+6)),
+                    seq(which(colnames(data)=="Cortisol.1.log") , I(which(colnames(data)=="Cortisol.1.log")+6)),
+                    which(colnames(data)=="cort.recov") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( seq(which(colnames(data)=="Cortisol.1.log") , I(which(colnames(data)=="Cortisol.1.log")+6)) )]))) {
+      data[subj, c(which(colnames(data)=="cort.react"), 
+                   which(colnames(data)=="cort.recov"),
+                   seq(which(colnames(data)=="Cortisol.1") , I(which(colnames(data)=="Cortisol.1")+6)) )] <- NA
+    } else if (t.table.sig[i, "var"] == "react_Frontal_Avg_dPAC_Z") {
+      data[subj, c( which(colnames(data)=="RS_Frontal_Avg_dPAC_Z") , which(colnames(data)=="Anticip_Frontal_Avg_dPAC_Z"), 
+                    which(colnames(data)=="EarlyRecov_Frontal_Avg_dPAC_Z"), which(colnames(data)=="LateRecov_Frontal_Avg_dPAC_Z"), 
+                    which(colnames(data)=="recov_Frontal_Avg_dPAC_Z") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( which(colnames(data)=="RS_Frontal_Avg_dPAC_Z") , which(colnames(data)=="Anticip_Frontal_Avg_dPAC_Z") , 
+                                                            which(colnames(data)=="EarlyRecov_Frontal_Avg_dPAC_Z") , which(colnames(data)=="LateRecov_Frontal_Avg_dPAC_Z") )]))) {
+      data[subj, c(which(colnames(data)=="react_Frontal_Avg_dPAC_Z"), which(colnames(data)=="recov_Frontal_Avg_dPAC_Z") )] <- NA
+    } else if (t.table.sig[i, "var"] == "react_Parietal_Avg_dPAC_Z") {
+      data[subj, c( which(colnames(data)=="RS_Parietal_Avg_dPAC_Z") , which(colnames(data)=="Anticip_Parietal_Avg_dPAC_Z"), 
+                    which(colnames(data)=="EarlyRecov_Parietal_Avg_dPAC_Z"), which(colnames(data)=="LateRecov_Parietal_Avg_dPAC_Z"), 
+                    which(colnames(data)=="recov_Parietal_Avg_dPAC_Z") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( which(colnames(data)=="RS_Parietal_Avg_dPAC_Z") , which(colnames(data)=="Anticip_Parietal_Avg_dPAC_Z") , 
+                                                            which(colnames(data)=="EarlyRecov_Parietal_Avg_dPAC_Z") , which(colnames(data)=="LateRecov_Parietal_Avg_dPAC_Z") )]))) {
+      data[subj, c(which(colnames(data)=="react_Parietal_Avg_dPAC_Z"), which(colnames(data)=="recov_Parietal_Avg_dPAC_Z") )] <- NA
+    } else if (t.table.sig[i, "var"] == "react_Frontal_Avg_AAC_R") {
+      data[subj, c( which(colnames(data)=="RS_Frontal_Avg_AAC_R") , which(colnames(data)=="Anticip_Frontal_Avg_AAC_R"), 
+                    which(colnames(data)=="EarlyRecov_Frontal_Avg_AAC_R"), which(colnames(data)=="LateRecov_Frontal_Avg_AAC_R"), 
+                    which(colnames(data)=="recov_Frontal_Avg_AAC_R") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( which(colnames(data)=="RS_Frontal_Avg_AAC_R") , which(colnames(data)=="Anticip_Frontal_Avg_AAC_R") , 
+                                                            which(colnames(data)=="EarlyRecov_Frontal_Avg_AAC_R") , which(colnames(data)=="LateRecov_Frontal_Avg_AAC_R") )]))) {
+      data[subj, c(which(colnames(data)=="react_Frontal_Avg_AAC_R"), which(colnames(data)=="recov_Frontal_Avg_AAC_R") )] <- NA
+    } else if (t.table.sig[i, "var"] == "react_Parietal_Avg_AAC_R") {
+      data[subj, c( which(colnames(data)=="RS_Parietal_Avg_AAC_R") , which(colnames(data)=="Anticip_Parietal_Avg_AAC_R"), 
+                    which(colnames(data)=="EarlyRecov_Parietal_Avg_AAC_R"), which(colnames(data)=="LateRecov_Parietal_Avg_AAC_R"), 
+                    which(colnames(data)=="recov_Parietal_Avg_AAC_R") )] <- NA
+    } else if (any(t.table.sig[i, "var"] == names(data[, c( which(colnames(data)=="RS_Parietal_Avg_AAC_R") , which(colnames(data)=="Anticip_Parietal_Avg_AAC_R") , 
+                                                            which(colnames(data)=="EarlyRecov_Parietal_Avg_AAC_R") , which(colnames(data)=="LateRecov_Parietal_Avg_AAC_R") )]))) {
+      data[subj, c(which(colnames(data)=="react_Parietal_Avg_AAC_R"), which(colnames(data)=="recov_Parietal_Avg_AAC_R") )] <- NA
+    }
+  } 
+} else { # If there are no outliers
+  print("No outliers")
+}
+
+# Create new dataset
+SET_CFC.outl.del <- data
+
+### Save dataframe
+save(SET_CFC.outl.del, file = "SET_CFC.outl.del.RData")
+
+
+
 
 ## Remove temporary variables
 remove(grub)
@@ -867,13 +660,427 @@ remove(grub2)
 remove(t.table1)
 remove(t.table2)
 remove(t.table)
-remove(p.adj)
 remove(sub)
 remove(data)
 remove(t.table.sig)
 remove(i)
-remove(num.outl)
 remove(subj)
+
+
+# Area under the curve ----------------------------------------------------
+
+## Packages
+library(dplyr)
+library(magrittr)
+
+### Select frontal PAC data
+data <- SET_CFC.outl.del %>% select(RS_Frontal_Avg_dPAC_Z,
+                           Anticip_Frontal_Avg_dPAC_Z,
+                           EarlyRecov_Frontal_Avg_dPAC_Z,
+                           LateRecov_Frontal_Avg_dPAC_Z)
+## Calculate AUC
+# Initialize variables
+obs <- nrow(data) # Number of observations
+t <- as.vector(c(0, 30, 49, 79)) # Time points of each measurement
+auc <- array(NA, dim = c(obs, length(t)-1))
+AUCg <- matrix(NA, nrow = obs, ncol = 1)
+AUC1 <- matrix(NA, nrow = obs, ncol = 1)
+# First part of formula for calculating AUCg
+for (n in 1:obs) {
+  for (i in 1:I(length(t)-1)) {
+    auc[n, i] <- I(data[n, i+1] + data[n, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg[, 1] <- rowSums(auc[, ])
+# Subtract the ground of AUCg to get AUC1
+for (n in 1:obs) {
+  AUC1[n, 1] <- AUCg[n, 1] - I(data[n, 1] * t[length(t)])
+}
+# Add new variable to dataframe
+SET_CFC.outl.del$frontal_PAC.auc <- AUC1
+
+
+### Select parietal PAC data
+data <- SET_CFC.outl.del %>% select(RS_Parietal_Avg_dPAC_Z,
+                           Anticip_Parietal_Avg_dPAC_Z,
+                           EarlyRecov_Parietal_Avg_dPAC_Z,
+                           LateRecov_Parietal_Avg_dPAC_Z)
+## Calculate AUC
+# Initialize variables
+obs <- nrow(data) # Number of observations
+t <- as.vector(c(0, 30, 49, 79)) # Time points of each measurement
+auc <- array(NA, dim = c(obs, length(t)-1))
+AUCg <- matrix(NA, nrow = obs, ncol = 1)
+AUC1 <- matrix(NA, nrow = obs, ncol = 1)
+# First part of formula for calculating AUCg
+for (n in 1:obs) {
+  for (i in 1:I(length(t)-1)) {
+    auc[n, i] <- I(data[n, i+1] + data[n, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg[, 1] <- rowSums(auc[, ])
+# Subtract the ground of AUCg to get AUC1
+for (n in 1:obs) {
+  AUC1[n, 1] <- AUCg[n, 1] - I(data[n, 1] * t[length(t)])
+}
+# Add new variable to dataframe
+SET_CFC.outl.del$parietal_PAC.auc <- AUC1
+
+
+### Select frontal AAC data
+data <- SET_CFC.outl.del %>% select(RS_Frontal_Avg_AAC_R,
+                           Anticip_Frontal_Avg_AAC_R,
+                           EarlyRecov_Frontal_Avg_AAC_R,
+                           LateRecov_Frontal_Avg_AAC_R)
+## Calculate AUC
+# Initialize variables
+obs <- nrow(data) # Number of observations
+t <- as.vector(c(0, 30, 49, 79)) # Time points of each measurement
+auc <- array(NA, dim = c(obs, length(t)-1))
+AUCg <- matrix(NA, nrow = obs, ncol = 1)
+AUC1 <- matrix(NA, nrow = obs, ncol = 1)
+# First part of formula for calculating AUCg
+for (n in 1:obs) {
+  for (i in 1:I(length(t)-1)) {
+    auc[n, i] <- I(data[n, i+1] + data[n, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg[, 1] <- rowSums(auc[, ])
+# Subtract the ground of AUCg to get AUC1
+for (n in 1:obs) {
+  AUC1[n, 1] <- AUCg[n, 1] - I(data[n, 1] * t[length(t)])
+}
+# Add new variable to dataframe
+SET_CFC.outl.del$frontal_AAC.auc <- AUC1
+
+
+### Select parietal AAC data
+data <- SET_CFC.outl.del %>% select(RS_Parietal_Avg_AAC_R,
+                           Anticip_Parietal_Avg_AAC_R,
+                           EarlyRecov_Parietal_Avg_AAC_R,
+                           LateRecov_Parietal_Avg_AAC_R)
+## Calculate AUC
+# Initialize variables
+obs <- nrow(data) # Number of observations
+t <- as.vector(c(0, 30, 49, 79)) # Time points of each measurement
+auc <- array(NA, dim = c(obs, length(t)-1))
+AUCg <- matrix(NA, nrow = obs, ncol = 1)
+AUC1 <- matrix(NA, nrow = obs, ncol = 1)
+# First part of formula for calculating AUCg
+for (n in 1:obs) {
+  for (i in 1:I(length(t)-1)) {
+    auc[n, i] <- I(data[n, i+1] + data[n, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg[, 1] <- rowSums(auc[, ])
+# Subtract the ground of AUCg to get AUC1
+for (n in 1:obs) {
+  AUC1[n, 1] <- AUCg[n, 1] - I(data[n, 1] * t[length(t)])
+}
+# Add new variable to dataframe
+SET_CFC.outl.del$parietal_AAC.auc <- AUC1
+
+
+### Anxiety
+## AUC
+# Initialize data
+t = as.vector(c(0, 28, 35, 45, 50, 55, 60, 65)) # For VAS
+# Select data
+data <- SET_CFC.outl.del %$% cbind.data.frame(Anx.1, Anx.2, Anx.3, Anx.4, 
+                                     Anx.5, Anx.6, Anx.7, Anx.8)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC.outl.del$anx.auc <- AUC1 %>% as.numeric()
+
+
+### Approach motivation
+## AUC
+# Initialize data
+t = as.vector(c(0, 28, 35, 45, 50, 55, 60, 65)) # For VAS
+# Select data
+data <- SET_CFC.outl.del %$% cbind.data.frame(Appr.1, Appr.2, Appr.3, Appr.4, 
+                                     Appr.5, Appr.6, Appr.7, Appr.8)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC.outl.del$appr.auc <- AUC1 %>% as.numeric()
+
+
+### Blood pressure
+## AUC
+# Initialize data
+t = as.vector(c(0, 7, 41, 47, 59, 65, 90, 96)) # For BP
+# Select data
+data <- SET_CFC.outl.del %$% cbind.data.frame(BP.1, BP.2, BP.3, BP.4,
+                                     BP.5, BP.6, BP.7, BP.8)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC.outl.del$bp.auc <- AUC1 %>% as.numeric()
+
+
+### Heart rate
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC.outl.del %$% cbind.data.frame(HR.1, HR.2, HR.3, HR.4,
+                                     HR.7, HR.8, HR.9, HR.10)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC.outl.del$hr.auc <- AUC1 %>% as.numeric()
+
+
+### PEP
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC.outl.del %$% cbind.data.frame(PEP.1, PEP.2, PEP.3, PEP.4,
+                                     PEP.7, PEP.8, PEP.9, PEP.10)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC.outl.del$pep.auc <- AUC1 %>% as.numeric()
+
+
+### Cardiac output
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC.outl.del %$% cbind.data.frame(CO.1, CO.2, CO.3, CO.4,
+                                     CO.7, CO.8, CO.9, CO.10)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC.outl.del$co.auc <- AUC1 %>% as.numeric()
+
+
+### TPR
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC.outl.del %$% cbind.data.frame(TPR.1, TPR.2, TPR.3, TPR.4,
+                                     TPR.5, TPR.6, TPR.7, TPR.8)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC.outl.del$tpr.auc <- AUC1 %>% as.numeric()
+
+### TCI
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC.outl.del %$% cbind.data.frame(TCI.1, TCI.2, TCI.3, TCI.4,
+                                     TCI.5, TCI.6, TCI.7, TCI.8)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC.outl.del$tci.auc <- AUC1 %>% as.numeric()
+
+
+### RSA
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC.outl.del %$% cbind.data.frame(RSA.1, RSA.2, RSA.3, RSA.4,
+                                     RSA.7, RSA.8, RSA.9, RSA.10)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC.outl.del$rsa.auc <- AUC1 %>% as.numeric()
+
+
+### RR
+## AUC
+# Initialize data
+t = as.vector(c(0, 2.5, 40, 42.5, 59, 61.5, 89, 91.5)) # For physio
+# Select data
+data <- SET_CFC.outl.del %$% cbind.data.frame(RR.1, RR.2, RR.3, RR.4,
+                                     RR.7, RR.8, RR.9, RR.10)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC.outl.del$rr.auc <- AUC1 %>% as.numeric()
+
+
+### Cortisol
+## AUC
+# Initialize data
+t = as.vector(c(0, 38, 49, 54, 59, 64, 69)) # For hormones
+# For cortisol
+data <- SET_CFC.outl.del %$% cbind.data.frame(Cortisol.1.log, Cortisol.2.log, Cortisol.3.log, 
+                                 Cortisol.4.log, Cortisol.5.log, Cortisol.6.log, 
+                                 Cortisol.7.log)
+# Initialize variables
+auc = matrix(NA, nrow = nrow(data), ncol = length(t)-1)
+# First part of formula for calculating AUCg
+for (j in 1:nrow(data)) {
+  for (i in 1:I(length(t)-1)) {
+    auc[j, i] <- I(data[j, i+1] + data[j, i]) * I(t[i+1]-t[i]) / 2
+  }
+}
+# Second part of formula for calculating AUCg
+AUCg <- rowSums(auc)
+# Subtract the ground of AUCg to get AUC1
+AUC1 <- matrix(NA, nrow = nrow(data), ncol = 1)
+for (i in 1:nrow(data)) {
+  AUC1[i] <- AUCg[i] - I(data[i, 1] * t[length(t)])
+}
+# Save into new dataset
+SET_CFC.outl.del$cort.auc <- AUC1 %>% as.numeric()
+
+# Make sure all the recovery variables are of class numeric.
+sapply(SET_CFC.outl.del, class) # Check class.
+library(dplyr)
+SET_CFC.outl.del <- SET_CFC.outl.del %>% mutate_if(funs(class(.) == "matrix"), as.numeric)
+sapply(SET_CFC.outl.del, class) # Check class again.
+
+### Save dataframe
+save(SET_CFC.outl.del, file = "SET_CFC.outl.del.RData")
+
+### Remove temporary variables
+remove(auc, AUC1, AUCg, data, i, j, t, n, obs)
 
 
 # Median split trait social anxiety (exploratory) ------------------------------------------------------------
@@ -1019,29 +1226,35 @@ save(meth, file = "meth.RData")
 mis <- 100 - (sum(complete.cases(SET_CFC.outl.del)) * 100 / nrow(SET_CFC.outl.del)) %>% round(0)
 
 ## Imputations in mice.
-SET_CFC.outl.del.imp <- mice(SET_CFC.outl.del, # Dataset.
-                    method = meth, # Custom passive imputation formula matrix.
-                    predictorMatrix = pred.adj, # Custom predictor matrix.
-                    #m = 2, # For testing: Low number of datasets to impute.
-                    m = mis, # Number of datasets to impute relate to percentage of missing data.
-                    maxit = 150, # Number of passes through the data. (Normally, 50 is enough to reach convergence.)
-                    seed = 123, # Random seed for reproducibility.
-                    print = FALSE); # Don't print the endless list of computations.
-beep("ping") # Play sound when computations are finished.
+SET_CFC.outl.del.imp <- mice(SET_CFC.outl.del, # Dataset
+                    method = meth, # Custom passive imputation formula matrix
+                    predictorMatrix = pred.adj, # Custom predictor matrix
+                    #m = 2, # For testing: Low number of datasets to impute
+                    m = mis, # Number of datasets to impute relate to percentage of missing data
+                    maxit = 100, # Number of passes through the data
+                    seed = 123, # Random seed for reproducibility
+                    print = FALSE); # Don't print the endless list of computations
+beep("ping") # Play sound when computations are finished
 
-# Save the imp object immediately to avoid having to re-run it.
+# Save the imp object immediately to avoid having to re-run it
 save(SET_CFC.outl.del.imp, file = "SET_CFC.outl.del.imp.RData")
 
-# For loading the imp object later.
+# For loading the imp object later
 #load("SET_CFC.outl.del.imp.RData")
 
-# track warnings.
+# track warnings
 warnings()
 
-## Check multicolinearity.
-SET_CFC.outl.del.imp$loggedEvents # If NULL, there are no multicolinearity issues.
+## Check multicolinearity
+SET_CFC.outl.del.imp$loggedEvents # If NULL, there are no multicolinearity issues
 
 ## Plots
+# Convergence plots
+SET.confplots <- plot(SET_CFC.outl.del.imp, layout = c(2, 2)) # Plot the iterations and check convergence
+SET.confplots
+# The passive imputations plots will be straight lines, all other variables need to have overlapping squiggly lines that are close together on the right side
+# -> No variance for variables only missing a single observation
+
 # Index which variables have been imputed to only plot those
 vars <- meth %>% as.data.frame(stringsAsFactors = FALSE) # Get the method matrix as dataframe
 colnames(vars) <- "meth" # Set the columnname
@@ -1050,67 +1263,75 @@ vars <- vars %>% mutate_all(na_if,"") # Replace "" with NA
 vars <- vars[which(!is.na(vars[, "meth"])), "variable"] # Select the variable names that are not NA in the method matrix
 vars_formula <- paste0(vars, collapse=" + ") # Add the terms together
 
-# Convergence plots
-SET.confplots <- plot(SET_CFC.outl.del.imp, layout = c(2, 2)) # Plot the iterations and check convergence.
-SET.confplots
-# The passive imputations plots will be straight lines, all other variables need to have overlapping squiggly lines that are close together on the right side.
-# -> No variance for variables only missing a single observation (HR.1, HR.2, RSA.1, RSA.2).
 # Boxplots
 SET.bwplots <- bwplot(SET_CFC.outl.del.imp, data = as.formula(paste0(vars_formula, " ~ .imp")),
-                      cex = 0.5, layout = c(1, 3)) # See boxplots of the imputated data for each set and variable to compare with original data.
+                      cex = 0.5, layout = c(1, 3)) # See boxplots of the imputated data for each set and variable to compare with original data
 SET.bwplots
 # Stripplots
 SET.stripplots <- stripplot(SET_CFC.outl.del.imp, data = as.formula(paste0(vars_formula, " ~ .imp")), 
-                            cex = 0.5, layout = c(1, 3))# See stripplots of the imputated data for each set and variable to compare with original data.
+                            cex = 0.5, layout = c(1, 3))# See stripplots of the imputated data for each set and variable to compare with original data
 SET.stripplots
 
-# Check out the imputed data
-head(SET_CFC.outl.del.imp$imp$react_Frontal_Avg_dPAC_Z)
 
-## Check if the imputed data distribution follows the existing distributions.
+## Density plots
 # State anxiety reactivity
 ggplot(SET_CFC.outl.del,aes(x=anx.react)) + 
-  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,6)), alpha = 0.2, fill = "blue", size = 1) +
+  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,1)), alpha = 0.2, fill = "blue", size = 1) +
   geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
   labs(title="State anxiety reactivity distribution by complete (red) and imputed (blue / thick line) data") +
   labs(x="State anxiety")
+# PEP reactivity
+ggplot(SET_CFC.outl.del,aes(x=pep.react)) + 
+  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,1)), alpha = 0.2, fill = "blue", size = 1) +
+  geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
+  labs(title="PEP reactivity distribution by complete (red) and imputed (blue / thick line) data") +
+  labs(x="PEP reactivity")
 # RSA reactivity
 ggplot(SET_CFC.outl.del,aes(x=rsa.react)) + 
-  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,6)), alpha = 0.2, fill = "blue", size = 1) +
+  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,1)), alpha = 0.2, fill = "blue", size = 1) +
   geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
   labs(title="RSA reactivity distribution by complete (red) and imputed (blue / thick line) data") +
   labs(x="RSA reactivity")
+# RR reactivity
+ggplot(SET_CFC.outl.del,aes(x=rr.react)) + 
+  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,1)), alpha = 0.2, fill = "blue", size = 1) +
+  geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
+  labs(title="RR reactivity distribution by complete (red) and imputed (blue / thick line) data") +
+  labs(x="RR reactivity")
 # Cortisol reactivity
 ggplot(SET_CFC.outl.del,aes(x=cort.react)) + 
-  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,6)), alpha = 0.2, fill = "blue", size = 1) +
+  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,1)), alpha = 0.2, fill = "blue", size = 1) +
   geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
   labs(title="Cortisol reactivity distribution by complete (red) and imputed (blue / thick line) data") +
   labs(x="Cortisol reactivity")
 # Frontal PAC reactivity
 ggplot(SET_CFC.outl.del,aes(x=react_Frontal_Avg_dPAC_Z)) + 
-  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,6)), alpha = 0.2, fill = "blue", size = 1) +
+  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,1)), alpha = 0.2, fill = "blue", size = 1) +
   geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
   labs(title="Frontal PAC reactivity distribution by complete (red) and imputed (blue / thick line) data") +
   labs(x="Frontal PAC reactivity")
 labs(x="State anxiety")
 # Parietal PAC reactivity
 ggplot(SET_CFC.outl.del,aes(x=react_Parietal_Avg_dPAC_Z)) + 
-  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,6)), alpha = 0.2, fill = "blue", size = 1) +
+  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,1)), alpha = 0.2, fill = "blue", size = 1) +
   geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
   labs(title="Parietal PAC reactivity distribution by complete (red) and imputed (blue / thick line) data") +
   labs(x="Parietal PAC reactivity")
 # Frontal AAC reactivity
 ggplot(SET_CFC.outl.del,aes(x=react_Frontal_Avg_AAC_R)) + 
-  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,6)), alpha = 0.2, fill = "blue", size = 1) +
+  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,1)), alpha = 0.2, fill = "blue", size = 1) +
   geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
   labs(title="Frontal AAC reactivity distribution by complete (red) and imputed (blue / thick line) data") +
   labs(x="Frontal AAC reactivity")
 # Parietal AAC reactivity
 ggplot(SET_CFC.outl.del,aes(x=react_Parietal_Avg_AAC_R)) + 
-  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,6)), alpha = 0.2, fill = "blue", size = 1) +
+  geom_density(data=data.frame(SET_CFC.outl.del$Subject, mice::complete(SET_CFC.outl.del.imp,1)), alpha = 0.2, fill = "blue", size = 1) +
   geom_density(data=SET_CFC.outl.del, alpha = 0.2, fill = "Red") +
   labs(title="Parietal AAC reactivity distribution by complete (red) and imputed (blue / thick line) data") +
   labs(x="Parietal AAC reactivity")
+
+# Check out some of the raw imputed data
+head(SET_CFC.outl.del.imp[["imp"]][["react_Frontal_Avg_dPAC_Z"]])
 
 
 ## Remove temporary variables
@@ -1123,6 +1344,7 @@ remove(SET.bwplots)
 remove(SET.confplots)
 remove(vars)
 remove(vars_formula)
+
 
 
 # Area under the curve - imputed ------------------------------------------
@@ -1176,7 +1398,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1188,7 +1414,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["frontal_PAC.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["frontal_PAC.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 
@@ -1226,7 +1452,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1238,7 +1468,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["parietal_PAC.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["parietal_PAC.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 
@@ -1276,7 +1506,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1288,7 +1522,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["frontal_AAC.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["frontal_AAC.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 
@@ -1326,7 +1560,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1338,7 +1576,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["parietal_AAC.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["parietal_AAC.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 
@@ -1374,7 +1612,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1386,7 +1628,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["anx.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["anx.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 
@@ -1422,7 +1664,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1434,7 +1680,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["appr.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["appr.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 
@@ -1470,7 +1716,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1482,7 +1732,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["bp.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["bp.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 
@@ -1518,7 +1768,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1530,7 +1784,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["hr.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["hr.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 
@@ -1566,7 +1820,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1578,7 +1836,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   ## Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["pep.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["pep.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 
@@ -1614,7 +1872,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1626,7 +1888,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["co.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["co.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 
@@ -1663,7 +1925,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1675,7 +1941,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["tpr.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["tpr.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 
@@ -1711,7 +1977,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1723,9 +1993,8 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["tci.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["tci.auc"]] <- AUC1 %>% as.data.frame()
 }
-
 
 
 ### Calculation of AUC for RSA
@@ -1760,7 +2029,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1772,7 +2045,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["rsa.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["rsa.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 
@@ -1808,7 +2081,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1820,7 +2097,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["rr.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["rr.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 
@@ -1858,7 +2135,11 @@ if (misobs > 0) { # Check whether there is any missing data
       }
     }
     # Second part of formula for calculating AUCg
-    AUCg[, m] <- rowSums(auc[, , m])
+    if (misobs > 1) { # Check whether there are at least two rows
+      AUCg[, m] <- rowSums(auc[, , m]) # rowSums only works for more than one rows
+    } else {
+      AUCg[, m] <- sum(auc[, , m]) # Normal sum
+    }
     # Subtract the ground of AUCg to get AUC1
     for (i in 1:misobs) {
       AUC1[i, m] <- AUCg[i, m] - I(subdata[i, 1] * t[length(t)])
@@ -1870,7 +2151,7 @@ if (misobs > 0) { # Check whether there is any missing data
   colnames(AUC1) <- 1:imp %>% as.character()
   ## Save new data
   # Put new variables into imputed values of imputed datasets
-  SET_CFC.outl.del.imp.extra[["imp"]][["cort.auc"]] <- AUC1
+  SET_CFC.outl.del.imp.extra[["imp"]][["cort.auc"]] <- AUC1 %>% as.data.frame()
 }
 
 ## Check new data

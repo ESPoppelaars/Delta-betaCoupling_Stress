@@ -253,6 +253,42 @@ remove(Data1)
 remove(Data2)
 
 
+# Compare summary statistics ----------------------------------------------
+## Packages
+library(magrittr) # For piping
+
+# Load imputed summary statistics
+load("imp.summary.RData")
+
+## Compare summary statistics between original and imputed variables
+# Select all relevant variables
+var <- c("anx.react", "pep.react", 
+         "rsa.react", "rr.react", "cort.react", 
+         "react_Frontal_Avg_dPAC_Z", "react_Parietal_Avg_dPAC_Z", 
+         "react_Frontal_Avg_AAC_R", "react_Parietal_Avg_AAC_R")
+# Loop over variables to print summary statistics
+for (i in 1:length(var)) { 
+  if (sum(!complete.cases(SET_CFC.outl.del[, var[i]]), na.rm = TRUE) > 0) { # Only print comparisons for variables that contain any missing values
+    print(c(paste0("Summary for ", var[i]), # Announce the variable name
+            "Orig mean" = mean(SET_CFC.outl.del[, var[i]], na.rm = TRUE) %>% round(3), # Calculate mean of original data
+            "Orig SD" = sd(SET_CFC.outl.del[, var[i]], na.rm = TRUE) %>% round(3), # Calculate standard deviation of original data
+            "Orig SEM" = sqrt(var(SET_CFC.outl.del[, var[i]], na.rm = TRUE)/sum(complete.cases(SET_CFC.outl.del[, var[i]]), na.rm = TRUE)) %>% round(3), # Calculate standard error of the mean of original data
+            "Orig miss" = sum(!complete.cases(SET_CFC.outl.del[, var[i]]), na.rm = TRUE), # Calculate the number of missing values for original data
+            "Imp mean" = imp.summary["Mean", var[i]], # Find mean of imputed data
+            "Imp SD" = imp.summary["Standard deviation", var[i]], # Find standard deviation of imputed data
+            "Imp SEM" = imp.summary["Standard error of the mean", var[i]] # Find standard error of the mean of imputed data
+    ))
+  } else { # If variables don't contain missing values, don't print summary statistics
+    print(paste0("No missing values for ", var[i])) 
+  }
+}
+
+## Remove temporary variables
+remove(var)
+remove(i)
+remove(imp.summary)
+
+
 # Line / bar plots (preregistered) -------------------------------------------------------------------
 
 ## Packages
@@ -2867,136 +2903,28 @@ for (i in 1:nrow(corr)) { # For every variable
 }
 # Add bayes factors to dataframe
 corr[, "BF"] <- est
-# Add sex to dataframe
-corr[, "Sex"] <- "All"
-
-
-### For men and women separately for RSA react
-## Select male subset
-maleData <- subset_datlist(SET_CFC.outl.del.imp, 
-                           subset = SET_CFC.outl.del.imp[[1]]$Sex == "Male",
-                           select=c("rsa.react",
-                                    "EnglishCompetence"),
-                           toclass="mids")
-## Do correlation
-corr_male <- micombine.cor(mi.res = maleData)
-## Remove double rows (second half)
-corr_male <- corr_male[c(1:I(nrow(corr_male) / 2)), ]
-rownames(corr_male) <- NULL # Reset rownames
-corr_male[["variable1"]] <- as.character(corr_male[["variable1"]]) # Remove factors
-corr_male[["variable2"]] <- as.character(corr_male[["variable2"]]) # Remove factors
-drops <- c("rse", "fisher_r", "fisher_rse", "fmi", "t", "lower95", "upper95") # Select unnecessary columns to remove
-corr_male <- corr_male[ , !(names(corr_male) %in% drops)] # Remove unnecessary columns
-## Calculate BayesFactors
-# Select data
-Dataset <- mice::complete(maleData, action = "long")
-colnames(Dataset)[1] <- "imp" # Rename imp column
-drops <- c(".id") # Select unnecessary columns to remove
-Dataset <- Dataset[ , !(names(Dataset) %in% drops)] # Remove unnecessary columns
-# Initialize variables
-m <- SET_CFC.outl.del.imp$m # Number of imputed datasets
-corrBF <- matrix(NA, nrow = nrow(corr_male), ncol = m) # Matrix to put the BayesFactors per imputed dataset
-n.obs <- matrix(NA, nrow = nrow(corr_male), ncol = m) # Matrix to put the number of observations
-correst <- matrix(NA, nrow = nrow(corr_male), ncol = m) # Matrix to put the variance of the variables per imputed dataset
-est <- matrix(NA, nrow = nrow(corr_male), ncol = 1) # Matrix to put the pooled estimates
-# Loop over all imputed datasets
-for (j in 1:m) { # For all imputed datasets
-  subdata <- Dataset %>% filter(imp == j) %>% select(-imp) %>% as.matrix() # Select imputed dataset
-  for (i in 1:nrow(corr_male)) { # For all variables in the data
-    BF <- correlationBF(y = subdata[, corr_male[i, "variable1"]], x = subdata[, corr_male[i, "variable2"]]) # Calculate BayesFactor
-    corrBF[i, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactor
-    n.obs[i, j] <- length(subdata[, corr_male[i, "variable1"]]) # Calculate sample size
-    correst[i, j] <- mean( c(var(subdata[, corr_male[i, "variable1"]]), var(subdata[, corr_male[i, "variable2"]])) ) / n.obs[i, j] # The standard error of the estimate (necessary for pooling)
-  }
-}
-# Pool the descriptives into one estimate with three decimals for all vars
-for (i in 1:nrow(corr_male)) { # For every variable
-  est[i, 1] <- pool.scalar(corrBF[i, ], correst[i, ], n = n.obs[i,], k = 1)[["qbar"]] %>% unlist() %>% round(3)
-}
-# Add bayes factors to dataframe
-corr_male[, "BF"] <- est
-# Add sex to dataframe
-corr_male[, "Sex"] <- "Male"
-## Save to ultimate dataframe
-corrs <- rbind(corr, corr_male)
-
-
-## Select female subset
-femaleData <- subset_datlist(SET_CFC.outl.del.imp, 
-                             subset = SET_CFC.outl.del.imp[[1]]$Sex == "Female",
-                             select=c("rsa.react",
-                                      "EnglishCompetence"),
-                             toclass="mids")
-## Do correlation
-corr_female <- micombine.cor(mi.res = femaleData)
-## Remove double rows (second half)
-corr_female <- corr_female[c(1:I(nrow(corr_female) / 2)), ]
-rownames(corr_female) <- NULL # Reset rownames
-corr_female[["variable1"]] <- as.character(corr_female[["variable1"]]) # Remove factors
-corr_female[["variable2"]] <- as.character(corr_female[["variable2"]]) # Remove factors
-drops <- c("rse", "fisher_r", "fisher_rse", "fmi", "t", "lower95", "upper95") # Select unnecessary columns to remove
-corr_female <- corr_female[ , !(names(corr_female) %in% drops)] # Remove unnecessary columns
-## Calculate BayesFactors
-# Select data
-Dataset <- mice::complete(femaleData, action = "long")
-colnames(Dataset)[1] <- "imp" # Rename imp column
-drops <- c(".id") # Select unnecessary columns to remove
-Dataset <- Dataset[ , !(names(Dataset) %in% drops)] # Remove unnecessary columns
-# Initialize variables
-m <- SET_CFC.outl.del.imp$m # Number of imputed datasets
-corrBF <- matrix(NA, nrow = nrow(corr_female), ncol = m) # Matrix to put the BayesFactors per imputed dataset
-n.obs <- matrix(NA, nrow = nrow(corr_female), ncol = m) # Matrix to put the number of observations
-correst <- matrix(NA, nrow = nrow(corr_female), ncol = m) # Matrix to put the variance of the variables per imputed dataset
-est <- matrix(NA, nrow = nrow(corr_female), ncol = 1) # Matrix to put the pooled estimates
-# Loop over all imputed datasets
-for (j in 1:m) { # For all imputed datasets
-  subdata <- Dataset %>% filter(imp == j) %>% select(-imp) %>% as.matrix() # Select imputed dataset
-  for (i in 1:nrow(corr_female)) { # For all variables in the data
-    BF <- correlationBF(y = subdata[, corr_female[i, "variable1"]], x = subdata[, corr_female[i, "variable2"]]) # Calculate BayesFactor
-    corrBF[i, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactor
-    n.obs[i, j] <- length(subdata[, corr_female[i, "variable1"]]) # Calculate sample size
-    correst[i, j] <- mean( c(var(subdata[, corr_female[i, "variable1"]]), var(subdata[, corr_female[i, "variable2"]])) ) / n.obs[i, j] # The standard error of the estimate (necessary for pooling)
-  }
-}
-# Pool the descriptives into one estimate with three decimals for all vars
-for (i in 1:nrow(corr_female)) { # For every variable
-  est[i, 1] <- pool.scalar(corrBF[i, ], correst[i, ], n = n.obs[i,], k = 1)[["qbar"]] %>% unlist() %>% round(3)
-}
-# Add bayes factors to dataframe
-corr_female[, "BF"] <- est
-# Add sex to dataframe
-corr_female[, "Sex"] <- "Female"
-## Save to ultimate dataframe
-corrs <- rbind(corrs, corr_female)
-
-
 # Add column with Bayes factor interpretation
-corrs[, "BF.evidence"] <- sapply(corrs$BF, function(x) BF.evidence(x)) # Add column with interpretation
+corr[, "BF.evidence"] <- sapply(corr$BF, function(x) BF.evidence(x)) # Add column with interpretation
 # Do fdr-correction
-corrs[, "p.value.adj"] <- p.adjust(corrs[, "p"], method = "fdr", n = nrow(corrs))
+corr[, "p.value.adj"] <- p.adjust(corr[, "p"], method = "fdr", n = nrow(corr))
 # Check significance
-corrs[, "p.adj.sig"] <- sapply(corrs[, "p.value.adj"], function(x) p.value.sig(x)) # Corrected
-corrs[, "p.value.sig"] <- sapply(corrs[, "p"], function(x) p.value.sig(x)) # Uncorrected
+corr[, "p.adj.sig"] <- sapply(corr[, "p.value.adj"], function(x) p.value.sig(x)) # Corrected
+corr[, "p.value.sig"] <- sapply(corr[, "p"], function(x) p.value.sig(x)) # Uncorrected
 # Add Cohen's d
-rho <- corrs[, "r"] # Extract rho
+rho <- corr[, "r"] # Extract rho
 d <-  r2d(rho) # Calculate Cohen's d from rho
-corrs$cohen.d <- abs(d) # Put the absolute of Cohen's d in dataframe
-corrs$cohen.d.mag <- sapply(corrs$cohen.d, function(x) cohen.d.magnitude(x)) # Add column with magnitude of cohen's d
+corr$cohen.d <- abs(d) # Put the absolute of Cohen's d in dataframe
+corr$cohen.d.mag <- sapply(corr$cohen.d, function(x) cohen.d.magnitude(x)) # Add column with magnitude of cohen's d
 # Order based on p-value
-corrs <- corrs %>% arrange(p)
+corr <- corr %>% arrange(p)
 
 ## Save results
 # base
-write.xlsx(corrs, "Correlations_EnglishCompetence.xlsx")
+write.xlsx(corr, "Correlations_EnglishCompetence.xlsx")
 
 
 ## Remove temporary variables
-remove(maleData)
-remove(femaleData)
 remove(corr)
-remove(corr_female)
-remove(corr_male)
-remove(corrs)
 remove(p.value.sig)
 remove(subdata)
 remove(d)
@@ -3139,102 +3067,6 @@ t.table["rsa.react (rr)", "BF"] <- ttest.tstat(t.table["rsa.react (rr)", "test.s
 t.table["rsa.react (rr)", "Prior"] <- "Uninformed prior" # Save as uninformed prior
 
 
-## Test men and women separately for RSA
-data_rsa <- SET_CFC.outl.del.imp %$% 
-  cbind.data.frame(Sex, rsa.react)
-rsa.test <- list(NA) # Saves all t-test results
-rsa.BF <- list(NA) # Saves all Bayes factor results
-for (x in 1: I(ncol(data_rsa[["analyses"]][[1]])-1) ) {
-  # Men
-  rsa.test[[x]] <- mi.t.test(data_rsa$analyses, # Do t-test
-                      x = colnames(data_rsa[["analyses"]][[1]])[[x+1]],
-                      alternative = "two.sided",
-                      subset = data_rsa[["analyses"]][[1]][["Sex"]] == "Male")
-  rsa.test[[x]]["data.name"] <- colnames(data_rsa[["analyses"]][[1]])[[x+1]] # Set variable name
-  rsa.test[[x]]["Sex"] <- "Male"  # Set sex
-  n1 <- subset_datlist(data_rsa$analyses, index=1, # Select current data
-                       subset = data_rsa$analyses[[1]][["Sex"]] == "Male",
-                       select = colnames(data_rsa[["analyses"]][[1]])[[x+1]] )
-  n1 <- nrow(n1[[1]]) # Calculate number of observations of the current data
-  rsa.BF[[x]] <- ttest.tstat(rsa.test[[x]][["statistic"]][["t"]], n1, simple = TRUE) # Get Bayes factor
-  # Women
-  rsa.test[[x+ I(ncol(data_rsa[["analyses"]][[1]])-1) ]] <- mi.t.test(data_rsa$analyses, # Do t-test
-                             x = colnames(data_rsa[["analyses"]][[1]])[[x+1]],
-                             alternative = "two.sided",
-                             subset = data_rsa[["analyses"]][[1]][["Sex"]] == "Female")
-  rsa.test[[x+ I(ncol(data_rsa[["analyses"]][[1]])-1) ]]["data.name"] <- colnames(data_rsa[["analyses"]][[1]])[[x+1]] # Set variable name
-  rsa.test[[x+ I(ncol(data_rsa[["analyses"]][[1]])-1) ]]["Sex"] <- "Female" # Set sex
-  n1 <- subset_datlist(data_rsa$analyses, index=1, # Select current data
-                       subset = data_rsa$analyses[[1]][["Sex"]] == "Female",
-                       select = colnames(data_rsa[["analyses"]][[1]])[[x+1]] )
-  n1 <- nrow(n1[[1]]) # Calculate number of observations of the current data
-  rsa.BF[[x+ I(ncol(data_rsa[["analyses"]][[1]])-1) ]] <- ttest.tstat(rsa.test[[x+ I(ncol(data_rsa[["analyses"]][[1]])-1) ]][["statistic"]][["t"]], n1, simple = TRUE) # Get Bayes factor
-}
-## Put the t-test results in a table
-# Extract results from list
-t.table2 <- sapply(rsa.test, function(x) {
-  c(test = x$method,
-    test.stat = x$statistic[["t"]],
-    df = x$parameter[["df"]],
-    p.value = x$p.value)
-})
-# Save the results as a dataframe
-t.table2 <- as.data.frame(t.table2)
-names <- sapply(rsa.test, function(x) {c(name = x$data.name)}) # Get the variable names
-colnames(t.table2) <- as.character(names) # Set the columns as variable names
-t.table2 <- t(t.table2) %>% as.data.frame(stringsAsFactors = FALSE) # Transpose the dataframe
-t.table2[, 2:4] <- lapply(t.table2[, 2:4], function(x) as.numeric(as.character(x))) %>% 
-  lapply(function(x) round(x, 5)) # Set the numeric columns to numeric and round to 5 decimals
-t.table2[, 4] <- t.table2[, 4] %>% as.numeric() %>% round(5) # Set the BF column to class numeric and round to 5 decimals
-t.table2[, "Prior"] <- "Uninformed prior" # Save as uninformed prior
-t.table2[, "BF"] <- rsa.BF %>% unlist() # Add bayes factors to dataframe
-names <- sapply(rsa.test, function(x) {c(name = x$Sex)}) # Get the variable names
-t.table2[, "Sex"] <- as.character(names) # Add the sex column
-t.table[, "Sex"] <- "All" # Add the sex column to the original t.table
-t.table <- rbind(t.table, t.table2) # Add to main t.table
-## Regressions to test significance of rsa reactivity (correcting for rr) for men and women separately
-# For men
-maleData <- subset_datlist(SET_CFC.outl.del.imp, 
-                                        subset = SET_CFC.outl.del.imp[[1]]$Sex == "Male",
-                                        select=c("rsa.react", "rr.react"),
-                                        toclass="mids")
-rsa.test <- with(maleData, lm(rsa.react ~ rr.react))
-rsa.test.pooled <- summary(pool(rsa.test))
-# Add to table
-t.table["rsa.react (rr) 1", ] <- data.frame(test = "Lineair regression (t-value)", 
-                                          test.stat = rsa.test.pooled[1, 3],
-                                          df = rsa.test.pooled[1,4],
-                                          p.value = rsa.test.pooled[1, 5])
-t.table["rsa.react (rr) 1", "test"] <- "Lineair regression (t-value)" # Set Regression test name again for stubborn df
-t.table["rsa.react (rr) 1", "Sex"] <- "Male" # Set sex
-# Bayes factor tests
-# Dataset of the group
-n1 <- nrow(maleData$data) # Number of observations of the first group
-# Get Bayes factor
-t.table["rsa.react (rr) 1", "BF"] <- ttest.tstat(t.table["rsa.react (rr)", "test.stat"], n1, simple = TRUE)
-t.table["rsa.react (rr) 1", "Prior"] <- "Uninformed prior" # Save as uninformed prior
-
-# For women
-femaleData <- subset_datlist(SET_CFC.outl.del.imp, 
-                           subset = SET_CFC.outl.del.imp[[1]]$Sex == "Female",
-                           select=c("rsa.react", "rr.react"),
-                           toclass="mids")
-rsa.test <- with(femaleData, lm(rsa.react ~ rr.react))
-rsa.test.pooled <- summary(pool(rsa.test))
-# Add to table
-t.table["rsa.react (rr) 2", ] <- data.frame(test = "Lineair regression (t-value)", 
-                                            test.stat = rsa.test.pooled[1, 3],
-                                            df = rsa.test.pooled[1,4],
-                                            p.value = rsa.test.pooled[1, 5])
-t.table["rsa.react (rr) 2", "test"] <- "Lineair regression (t-value)" # Set Regression test name again for stubborn df
-t.table["rsa.react (rr) 2", "Sex"] <- "Female" # Set sex
-# Bayes factor tests
-# Dataset of the group
-n1 <- nrow(femaleData$data) # Number of observations of the first group
-# Get Bayes factor
-t.table["rsa.react (rr) 2", "BF"] <- ttest.tstat(t.table["rsa.react (rr)", "test.stat"], n1, simple = TRUE)
-t.table["rsa.react (rr) 2", "Prior"] <- "Uninformed prior" # Save as uninformed prior
-
 # Add column with Bayes factor interpretation
 t.table[, "BF.evidence"] <- sapply(t.table$BF, function(x) BF.evidence(x)) # Add column with interpretation
 
@@ -3292,11 +3124,6 @@ remove(BF_t)
 remove(BF.evidence)
 remove(cohen.d.magnitude)
 remove(se)
-remove(data_rsa)
-remove(femaleData)
-remove(maleData)
-remove(rsa.BF)
-remove(t.table2)
 
 
 # Location differences between frontal and parietal (preregistered) -----------------------------------------------------------------
@@ -4353,9 +4180,10 @@ library(car) # For outlier test and vif test
 library(xlsx) # For exporting to excel
 library(miceadds) # For mi correlations and standardization
 library(psych) # For converting correlation coefficients to cohen's d
+library(BayesFactor) # For Bayesian statistics
 source('cohen.d.magnitude.R') # Custom function to check the magnitude of Cohen's d values
 source('p.value.sig.R') # Custom function to check the significance of p.values
-
+source('BF.evidence.R') # Custom function to check the interpretation of Bayes Factors
 
 # Load data
 load("SET_CFC.outl.del.imp.RData")
@@ -4383,6 +4211,12 @@ Data.list <- scale_datlist(Data, # Standardize selected variables
                                          "ZEnglishCompetence"))
 Data <- datlist2mids(Data.list) # Convert back to a mids
 
+# Initialize variables for Bayesian statistics
+Data_long <- mice::complete(Data, action = "long") # Transform mids into long dataset
+colnames(Data_long)[1] <- "imp" # Change the ".imp" variable into "imp"
+m <- Data$m # Number of imputions
+n.obs <-Data_long %>% filter(imp == 1) %>% nrow() # Numbers of observations in the imputed dataset
+
 
 ### Full models
 
@@ -4392,7 +4226,8 @@ mod <- 1
 ## Specify dependant variable for partial correlations
 dependant <- "ZRS_Frontal_Avg_dPAC_Z"
 ## Fit model
-fit.lm.imp <- lm.mids(ZRS_Frontal_Avg_dPAC_Z ~ ZLSAS + ZAnx.1 + ZPEP.2 + ZRSA.2 + ZRR.2 + ZCortisol.1.log + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(ZRS_Frontal_Avg_dPAC_Z ~ ZLSAS + ZAnx.1 + ZPEP.2 + ZRSA.2 + 
+                        ZRR.2 + ZCortisol.1.log, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4401,6 +4236,7 @@ sum.lm.imp <- summary(pool.lm.imp) # Summary
 sum.lm.imp[, "Model"] <- mod # Save the lm model number
 sum.lm.imp[, "Var"] <- rownames(sum.lm.imp) # Save the variable names
 sum.lm.imp[, "Dep"] <- dependant # Save name of dependent variable
+sum.lm.imp <- sum.lm.imp[-1, ] # Remove the intercept
 ## Check multicollinearity
 multicol <- list(NA) # Initialize results list
 # Compute VIF for each variable and imputed dataset
@@ -4457,13 +4293,45 @@ corr.table[, 3:4] <- lapply(corr.table[, 3:4], function(x) as.numeric(as.charact
   lapply(function(x) round(x, 5)) # Set the numeric columns to numeric and round to 5 decimals
 corr.table[, "cohen.d"] <- r2d(corr.table[, "rho"]) # Compute cohen's d
 corr.table[, "Model"] <- mod # Save the lm model number
+## Bayes factors
+# Initialize variables
+BFest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the BayesFactors estimates
+varest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the variance of the dependent variable
+est <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = 1) # Matrix to put the pooled estimates
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed Data_longs
+  subdata <- Data_long %>% filter(imp == j) # Select imputed Data_long
+  BF <- generalTestBF(formula = as.formula(fit.lm.imp[["call"]][["formula"]]), # Calculate BayesFactor
+                      data = subdata, whichModels = "bottom", progress = FALSE)
+  BFest[, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactors
+  # Calculate the standard error of the estimate per variable (necessary for pooling)
+  for (i in 1:nrow(sum.lm.imp)) { # Loop over all variables/models
+    if (grepl(":", sum.lm.imp[i, "Var"])) { # If the variable contains an interaction
+      Var <- sub("\\:.*", "", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Select the variable name before ":"
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else if (grepl("SexFemale", sum.lm.imp[i, "Var"])) { # If the main effect contains Sex
+      Var <- sub("SexFemale", "Sex", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Rename SexFemale to Sex
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else { # For 'normal' variables
+      varest[i, j] <- mean(c( var(subdata[, sum.lm.imp[i, "Var"]]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    }
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:nrow(sum.lm.imp)) { # For every variable
+  est[i, 1] <- pool.scalar(BFest[i, ], varest[i, ], n = n.obs, k = 1)[["qbar"]] %>% unlist() %>% round(3)
+}
+# Add bayes factors to dataframe
+sum.lm.imp[, "BF"] <- est
 # Save results
 rownames(sum.lm.imp) <- NULL # Reset rownames of regression table
-lm.table <- sum.lm.imp[-1, ] # Save regression table without the intercept
+lm.table <- sum.lm.imp # Save regression table
 corrs <- corr.table # Save correlation table
 multicol.table <- multicol.table.2 # Save multicollinearity
 rsqr.imp <- pool.rsqr.imp # Save R-squared results
-
 
 
 ### Model 2
@@ -4472,7 +4340,8 @@ mod <- 2
 ## Specify dependant variable for partial correlations
 dependant <- "ZRS_Parietal_Avg_dPAC_Z"
 ## Fit model
-fit.lm.imp <- lm.mids(ZRS_Parietal_Avg_dPAC_Z ~ ZLSAS + ZAnx.1 + ZPEP.2 + ZRSA.2 + ZRR.2 + ZCortisol.1.log + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(ZRS_Parietal_Avg_dPAC_Z ~ ZLSAS + ZAnx.1 + ZPEP.2 + ZRSA.2 + 
+                        ZRR.2 + ZCortisol.1.log, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4481,6 +4350,7 @@ sum.lm.imp <- summary(pool.lm.imp) # Summary
 sum.lm.imp[, "Model"] <- mod # Save the lm model number
 sum.lm.imp[, "Var"] <- rownames(sum.lm.imp) # Save the variable names
 sum.lm.imp[, "Dep"] <- dependant # Save name of dependent variable
+sum.lm.imp <- sum.lm.imp[-1, ] # Remove the intercept
 ## Check multicollinearity
 multicol <- list(NA) # Initialize results list
 # Compute VIF for each variable and imputed dataset
@@ -4537,9 +4407,42 @@ corr.table[, 3:4] <- lapply(corr.table[, 3:4], function(x) as.numeric(as.charact
   lapply(function(x) round(x, 5)) # Set the numeric columns to numeric and round to 5 decimals
 corr.table[, "cohen.d"] <- r2d(corr.table[, "rho"]) # Compute cohen's d
 corr.table[, "Model"] <- mod # Save the lm model number
+## Bayes factors
+# Initialize variables
+BFest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the BayesFactors estimates
+varest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the variance of the dependent variable
+est <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = 1) # Matrix to put the pooled estimates
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed Data_longs
+  subdata <- Data_long %>% filter(imp == j) # Select imputed Data_long
+  BF <- generalTestBF(formula = as.formula(fit.lm.imp[["call"]][["formula"]]), # Calculate BayesFactor
+                      data = subdata, whichModels = "bottom", progress = FALSE)
+  BFest[, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactors
+  # Calculate the standard error of the estimate per variable (necessary for pooling)
+  for (i in 1:nrow(sum.lm.imp)) { # Loop over all variables/models
+    if (grepl(":", sum.lm.imp[i, "Var"])) { # If the variable contains an interaction
+      Var <- sub("\\:.*", "", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Select the variable name before ":"
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else if (grepl("SexFemale", sum.lm.imp[i, "Var"])) { # If the main effect contains Sex
+      Var <- sub("SexFemale", "Sex", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Rename SexFemale to Sex
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else { # For 'normal' variables
+      varest[i, j] <- mean(c( var(subdata[, sum.lm.imp[i, "Var"]]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    }
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:nrow(sum.lm.imp)) { # For every variable
+  est[i, 1] <- pool.scalar(BFest[i, ], varest[i, ], n = n.obs, k = 1)[["qbar"]] %>% unlist() %>% round(3)
+}
+# Add bayes factors to dataframe
+sum.lm.imp[, "BF"] <- est
 # Save results
 rownames(sum.lm.imp) <- NULL # Reset rownames of regression table
-lm.table <- rbind(lm.table, sum.lm.imp[-1, ]) # Save regression table without the intercept
+lm.table <- rbind(lm.table, sum.lm.imp) # Save regression table
 corrs <- rbind(corrs, corr.table) # Save correlation table
 multicol.table <- rbind(multicol.table, multicol.table.2) # Save multicollinearity
 rsqr.imp <- rbind(rsqr.imp, pool.rsqr.imp) # Save R-squared results
@@ -4551,7 +4454,8 @@ mod <- 3
 ## Specify dependant variable for partial correlations
 dependant <- "ZRS_Frontal_Avg_AAC_R"
 ## Fit model
-fit.lm.imp <- lm.mids(ZRS_Frontal_Avg_AAC_R ~ ZLSAS + ZAnx.1 + ZPEP.2 + ZRSA.2 + ZRR.2 + ZCortisol.1.log + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(ZRS_Frontal_Avg_AAC_R ~ ZLSAS + ZAnx.1 + ZPEP.2 + ZRSA.2 + 
+                        ZRR.2 + ZCortisol.1.log, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4560,6 +4464,7 @@ sum.lm.imp <- summary(pool.lm.imp) # Summary
 sum.lm.imp[, "Model"] <- mod # Save the lm model number
 sum.lm.imp[, "Var"] <- rownames(sum.lm.imp) # Save the variable names
 sum.lm.imp[, "Dep"] <- dependant # Save name of dependent variable
+sum.lm.imp <- sum.lm.imp[-1, ] # Remove the intercept
 ## Check multicollinearity
 multicol <- list(NA) # Initialize results list
 # Compute VIF for each variable and imputed dataset
@@ -4616,9 +4521,42 @@ corr.table[, 3:4] <- lapply(corr.table[, 3:4], function(x) as.numeric(as.charact
   lapply(function(x) round(x, 5)) # Set the numeric columns to numeric and round to 5 decimals
 corr.table[, "cohen.d"] <- r2d(corr.table[, "rho"]) # Compute cohen's d
 corr.table[, "Model"] <- mod # Save the lm model number
+## Bayes factors
+# Initialize variables
+BFest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the BayesFactors estimates
+varest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the variance of the dependent variable
+est <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = 1) # Matrix to put the pooled estimates
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed Data_longs
+  subdata <- Data_long %>% filter(imp == j) # Select imputed Data_long
+  BF <- generalTestBF(formula = as.formula(fit.lm.imp[["call"]][["formula"]]), # Calculate BayesFactor
+                      data = subdata, whichModels = "bottom", progress = FALSE)
+  BFest[, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactors
+  # Calculate the standard error of the estimate per variable (necessary for pooling)
+  for (i in 1:nrow(sum.lm.imp)) { # Loop over all variables/models
+    if (grepl(":", sum.lm.imp[i, "Var"])) { # If the variable contains an interaction
+      Var <- sub("\\:.*", "", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Select the variable name before ":"
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else if (grepl("SexFemale", sum.lm.imp[i, "Var"])) { # If the main effect contains Sex
+      Var <- sub("SexFemale", "Sex", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Rename SexFemale to Sex
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else { # For 'normal' variables
+      varest[i, j] <- mean(c( var(subdata[, sum.lm.imp[i, "Var"]]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    }
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:nrow(sum.lm.imp)) { # For every variable
+  est[i, 1] <- pool.scalar(BFest[i, ], varest[i, ], n = n.obs, k = 1)[["qbar"]] %>% unlist() %>% round(3)
+}
+# Add bayes factors to dataframe
+sum.lm.imp[, "BF"] <- est
 # Save results
 rownames(sum.lm.imp) <- NULL # Reset rownames of regression table
-lm.table <- rbind(lm.table, sum.lm.imp[-1, ]) # Save regression table without the intercept
+lm.table <- rbind(lm.table, sum.lm.imp) # Save regression table
 corrs <- rbind(corrs, corr.table) # Save correlation table
 multicol.table <- rbind(multicol.table, multicol.table.2) # Save multicollinearity
 rsqr.imp <- rbind(rsqr.imp, pool.rsqr.imp) # Save R-squared results
@@ -4630,7 +4568,8 @@ mod <- 4
 ## Specify dependant variable for partial correlations
 dependant <- "ZRS_Parietal_Avg_AAC_R"
 ## Fit model
-fit.lm.imp <- lm.mids(ZRS_Parietal_Avg_AAC_R ~ ZLSAS + ZAnx.1 + ZPEP.2 + ZRSA.2 + ZRR.2 + ZCortisol.1.log + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(ZRS_Parietal_Avg_AAC_R ~ ZLSAS + ZAnx.1 + ZPEP.2 + ZRSA.2 + 
+                        ZRR.2 + ZCortisol.1.log, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4639,6 +4578,7 @@ sum.lm.imp <- summary(pool.lm.imp) # Summary
 sum.lm.imp[, "Model"] <- mod # Save the lm model number
 sum.lm.imp[, "Var"] <- rownames(sum.lm.imp) # Save the variable names
 sum.lm.imp[, "Dep"] <- dependant # Save name of dependent variable
+sum.lm.imp <- sum.lm.imp[-1, ] # Remove the intercept
 ## Check multicollinearity
 multicol <- list(NA) # Initialize results list
 # Compute VIF for each variable and imputed dataset
@@ -4695,9 +4635,42 @@ corr.table[, 3:4] <- lapply(corr.table[, 3:4], function(x) as.numeric(as.charact
   lapply(function(x) round(x, 5)) # Set the numeric columns to numeric and round to 5 decimals
 corr.table[, "cohen.d"] <- r2d(corr.table[, "rho"]) # Compute cohen's d
 corr.table[, "Model"] <- mod # Save the lm model number
+## Bayes factors
+# Initialize variables
+BFest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the BayesFactors estimates
+varest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the variance of the dependent variable
+est <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = 1) # Matrix to put the pooled estimates
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed Data_longs
+  subdata <- Data_long %>% filter(imp == j) # Select imputed Data_long
+  BF <- generalTestBF(formula = as.formula(fit.lm.imp[["call"]][["formula"]]), # Calculate BayesFactor
+                      data = subdata, whichModels = "bottom", progress = FALSE)
+  BFest[, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactors
+  # Calculate the standard error of the estimate per variable (necessary for pooling)
+  for (i in 1:nrow(sum.lm.imp)) { # Loop over all variables/models
+    if (grepl(":", sum.lm.imp[i, "Var"])) { # If the variable contains an interaction
+      Var <- sub("\\:.*", "", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Select the variable name before ":"
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else if (grepl("SexFemale", sum.lm.imp[i, "Var"])) { # If the main effect contains Sex
+      Var <- sub("SexFemale", "Sex", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Rename SexFemale to Sex
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else { # For 'normal' variables
+      varest[i, j] <- mean(c( var(subdata[, sum.lm.imp[i, "Var"]]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    }
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:nrow(sum.lm.imp)) { # For every variable
+  est[i, 1] <- pool.scalar(BFest[i, ], varest[i, ], n = n.obs, k = 1)[["qbar"]] %>% unlist() %>% round(3)
+}
+# Add bayes factors to dataframe
+sum.lm.imp[, "BF"] <- est
 # Save results
 rownames(sum.lm.imp) <- NULL # Reset rownames of regression table
-lm.table <- rbind(lm.table, sum.lm.imp[-1, ]) # Save regression table without the intercept
+lm.table <- rbind(lm.table, sum.lm.imp) # Save regression table
 corrs <- rbind(corrs, corr.table) # Save correlation table
 multicol.table <- rbind(multicol.table, multicol.table.2) # Save multicollinearity
 rsqr.imp <- rbind(rsqr.imp, pool.rsqr.imp) # Save R-squared results
@@ -4709,7 +4682,8 @@ mod <- 5
 ## Specify dependant variable for partial correlations
 dependant <- "Zreact_Frontal_Avg_dPAC_Z"
 ## Fit model
-fit.lm.imp <- lm.mids(Zreact_Frontal_Avg_dPAC_Z ~ ZLSAS +Zanx.react + Zpep.react + Zrsa.react + Zrr.react + Zcort.react + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(Zreact_Frontal_Avg_dPAC_Z ~ ZLSAS +Zanx.react + Zpep.react + Zrsa.react + 
+                        Zrr.react + Zcort.react, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4718,6 +4692,7 @@ sum.lm.imp <- summary(pool.lm.imp) # Summary
 sum.lm.imp[, "Model"] <- mod # Save the lm model number
 sum.lm.imp[, "Var"] <- rownames(sum.lm.imp) # Save the variable names
 sum.lm.imp[, "Dep"] <- dependant # Save name of dependent variable
+sum.lm.imp <- sum.lm.imp[-1, ] # Remove the intercept
 ## Check multicollinearity
 multicol <- list(NA) # Initialize results list
 # Compute VIF for each variable and imputed dataset
@@ -4774,9 +4749,42 @@ corr.table[, 3:4] <- lapply(corr.table[, 3:4], function(x) as.numeric(as.charact
   lapply(function(x) round(x, 5)) # Set the numeric columns to numeric and round to 5 decimals
 corr.table[, "cohen.d"] <- r2d(corr.table[, "rho"]) # Compute cohen's d
 corr.table[, "Model"] <- mod # Save the lm model number
+## Bayes factors
+# Initialize variables
+BFest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the BayesFactors estimates
+varest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the variance of the dependent variable
+est <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = 1) # Matrix to put the pooled estimates
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed Data_longs
+  subdata <- Data_long %>% filter(imp == j) # Select imputed Data_long
+  BF <- generalTestBF(formula = as.formula(fit.lm.imp[["call"]][["formula"]]), # Calculate BayesFactor
+                     data = subdata, whichModels = "bottom", progress = FALSE)
+  BFest[, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactors
+  # Calculate the standard error of the estimate per variable (necessary for pooling)
+  for (i in 1:nrow(sum.lm.imp)) { # Loop over all variables/models
+    if (grepl(":", sum.lm.imp[i, "Var"])) { # If the variable contains an interaction
+      Var <- sub("\\:.*", "", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Select the variable name before ":"
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else if (grepl("SexFemale", sum.lm.imp[i, "Var"])) { # If the main effect contains Sex
+      Var <- sub("SexFemale", "Sex", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Rename SexFemale to Sex
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else { # For 'normal' variables
+      varest[i, j] <- mean(c( var(subdata[, sum.lm.imp[i, "Var"]]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    }
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:nrow(sum.lm.imp)) { # For every variable
+  est[i, 1] <- pool.scalar(BFest[i, ], varest[i, ], n = n.obs, k = 1)[["qbar"]] %>% unlist() %>% round(3)
+}
+# Add bayes factors to dataframe
+sum.lm.imp[, "BF"] <- est
 # Save results
 rownames(sum.lm.imp) <- NULL # Reset rownames of regression table
-lm.table <- rbind(lm.table, sum.lm.imp[-1, ]) # Save regression table without the intercept
+lm.table <- rbind(lm.table, sum.lm.imp) # Save regression table
 corrs <- rbind(corrs, corr.table) # Save correlation table
 multicol.table <- rbind(multicol.table, multicol.table.2) # Save multicollinearity
 rsqr.imp <- rbind(rsqr.imp, pool.rsqr.imp) # Save R-squared results
@@ -4788,7 +4796,8 @@ mod <- 6
 ## Specify dependant variable for partial correlations
 dependant <- "Zreact_Parietal_Avg_dPAC_Z"
 ## Fit model
-fit.lm.imp <- lm.mids(Zreact_Parietal_Avg_dPAC_Z ~ ZLSAS +Zanx.react + Zpep.react + Zrsa.react + Zrr.react + Zcort.react + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(Zreact_Parietal_Avg_dPAC_Z ~ ZLSAS +Zanx.react + Zpep.react + Zrsa.react + 
+                        Zrr.react + Zcort.react, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4797,6 +4806,7 @@ sum.lm.imp <- summary(pool.lm.imp) # Summary
 sum.lm.imp[, "Model"] <- mod # Save the lm model number
 sum.lm.imp[, "Var"] <- rownames(sum.lm.imp) # Save the variable names
 sum.lm.imp[, "Dep"] <- dependant # Save name of dependent variable
+sum.lm.imp <- sum.lm.imp[-1, ] # Remove the intercept
 ## Check multicollinearity
 multicol <- list(NA) # Initialize results list
 # Compute VIF for each variable and imputed dataset
@@ -4853,9 +4863,42 @@ corr.table[, 3:4] <- lapply(corr.table[, 3:4], function(x) as.numeric(as.charact
   lapply(function(x) round(x, 5)) # Set the numeric columns to numeric and round to 5 decimals
 corr.table[, "cohen.d"] <- r2d(corr.table[, "rho"]) # Compute cohen's d
 corr.table[, "Model"] <- mod # Save the lm model number
+## Bayes factors
+# Initialize variables
+BFest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the BayesFactors estimates
+varest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the variance of the dependent variable
+est <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = 1) # Matrix to put the pooled estimates
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed Data_longs
+  subdata <- Data_long %>% filter(imp == j) # Select imputed Data_long
+  BF <- generalTestBF(formula = as.formula(fit.lm.imp[["call"]][["formula"]]), # Calculate BayesFactor
+                      data = subdata, whichModels = "bottom", progress = FALSE)
+  BFest[, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactors
+  # Calculate the standard error of the estimate per variable (necessary for pooling)
+  for (i in 1:nrow(sum.lm.imp)) { # Loop over all variables/models
+    if (grepl(":", sum.lm.imp[i, "Var"])) { # If the variable contains an interaction
+      Var <- sub("\\:.*", "", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Select the variable name before ":"
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else if (grepl("SexFemale", sum.lm.imp[i, "Var"])) { # If the main effect contains Sex
+      Var <- sub("SexFemale", "Sex", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Rename SexFemale to Sex
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else { # For 'normal' variables
+      varest[i, j] <- mean(c( var(subdata[, sum.lm.imp[i, "Var"]]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    }
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:nrow(sum.lm.imp)) { # For every variable
+  est[i, 1] <- pool.scalar(BFest[i, ], varest[i, ], n = n.obs, k = 1)[["qbar"]] %>% unlist() %>% round(3)
+}
+# Add bayes factors to dataframe
+sum.lm.imp[, "BF"] <- est
 # Save results
 rownames(sum.lm.imp) <- NULL # Reset rownames of regression table
-lm.table <- rbind(lm.table, sum.lm.imp[-1, ]) # Save regression table without the intercept
+lm.table <- rbind(lm.table, sum.lm.imp) # Save regression table
 corrs <- rbind(corrs, corr.table) # Save correlation table
 multicol.table <- rbind(multicol.table, multicol.table.2) # Save multicollinearity
 rsqr.imp <- rbind(rsqr.imp, pool.rsqr.imp) # Save R-squared results
@@ -4867,7 +4910,8 @@ mod <- 7
 ## Specify dependant variable for partial correlations
 dependant <- "Zreact_Frontal_Avg_AAC_R"
 ## Fit model
-fit.lm.imp <- lm.mids(Zreact_Frontal_Avg_AAC_R ~ ZLSAS + Zanx.react + Zpep.react + Zrsa.react + Zrr.react + Zcort.react + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(Zreact_Frontal_Avg_AAC_R ~ ZLSAS + Zanx.react + Zpep.react + Zrsa.react + 
+                        Zrr.react + Zcort.react, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4876,6 +4920,7 @@ sum.lm.imp <- summary(pool.lm.imp) # Summary
 sum.lm.imp[, "Model"] <- mod # Save the lm model number
 sum.lm.imp[, "Var"] <- rownames(sum.lm.imp) # Save the variable names
 sum.lm.imp[, "Dep"] <- dependant # Save name of dependent variable
+sum.lm.imp <- sum.lm.imp[-1, ] # Remove the intercept
 ## Check multicollinearity
 multicol <- list(NA) # Initialize results list
 # Compute VIF for each variable and imputed dataset
@@ -4932,9 +4977,42 @@ corr.table[, 3:4] <- lapply(corr.table[, 3:4], function(x) as.numeric(as.charact
   lapply(function(x) round(x, 5)) # Set the numeric columns to numeric and round to 5 decimals
 corr.table[, "cohen.d"] <- r2d(corr.table[, "rho"]) # Compute cohen's d
 corr.table[, "Model"] <- mod # Save the lm model number
+## Bayes factors
+# Initialize variables
+BFest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the BayesFactors estimates
+varest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the variance of the dependent variable
+est <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = 1) # Matrix to put the pooled estimates
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed Data_longs
+  subdata <- Data_long %>% filter(imp == j) # Select imputed Data_long
+  BF <- generalTestBF(formula = as.formula(fit.lm.imp[["call"]][["formula"]]), # Calculate BayesFactor
+                      data = subdata, whichModels = "bottom", progress = FALSE)
+  BFest[, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactors
+  # Calculate the standard error of the estimate per variable (necessary for pooling)
+  for (i in 1:nrow(sum.lm.imp)) { # Loop over all variables/models
+    if (grepl(":", sum.lm.imp[i, "Var"])) { # If the variable contains an interaction
+      Var <- sub("\\:.*", "", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Select the variable name before ":"
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else if (grepl("SexFemale", sum.lm.imp[i, "Var"])) { # If the main effect contains Sex
+      Var <- sub("SexFemale", "Sex", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Rename SexFemale to Sex
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else { # For 'normal' variables
+      varest[i, j] <- mean(c( var(subdata[, sum.lm.imp[i, "Var"]]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    }
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:nrow(sum.lm.imp)) { # For every variable
+  est[i, 1] <- pool.scalar(BFest[i, ], varest[i, ], n = n.obs, k = 1)[["qbar"]] %>% unlist() %>% round(3)
+}
+# Add bayes factors to dataframe
+sum.lm.imp[, "BF"] <- est
 # Save results
 rownames(sum.lm.imp) <- NULL # Reset rownames of regression table
-lm.table <- rbind(lm.table, sum.lm.imp[-1, ]) # Save regression table without the intercept
+lm.table <- rbind(lm.table, sum.lm.imp) # Save regression table
 corrs <- rbind(corrs, corr.table) # Save correlation table
 multicol.table <- rbind(multicol.table, multicol.table.2) # Save multicollinearity
 rsqr.imp <- rbind(rsqr.imp, pool.rsqr.imp) # Save R-squared results
@@ -4946,7 +5024,8 @@ mod <- 8
 ## Specify dependant variable for partial correlations
 dependant <- "Zreact_Parietal_Avg_AAC_R"
 ## Fit model
-fit.lm.imp <- lm.mids(Zreact_Parietal_Avg_AAC_R ~ ZLSAS + Zanx.react + Zpep.react + Zrsa.react + Zrr.react + Zcort.react + ZEnglishCompetence, data = Data)
+fit.lm.imp <- lm.mids(Zreact_Parietal_Avg_AAC_R ~ ZLSAS + Zanx.react + Zpep.react + Zrsa.react + 
+                        Zrr.react + Zcort.react, data = Data)
 ## Pool regression results
 pool.lm.imp <- pool(fit.lm.imp) # Pool
 pool.rsqr.imp <- pool.r.squared(fit.lm.imp) %>% as.data.frame() # R-squared
@@ -4955,6 +5034,7 @@ sum.lm.imp <- summary(pool.lm.imp) # Summary
 sum.lm.imp[, "Model"] <- mod # Save the lm model number
 sum.lm.imp[, "Var"] <- rownames(sum.lm.imp) # Save the variable names
 sum.lm.imp[, "Dep"] <- dependant # Save name of dependent variable
+sum.lm.imp <- sum.lm.imp[-1, ] # Remove the intercept
 ## Check multicollinearity
 multicol <- list(NA) # Initialize results list
 # Compute VIF for each variable and imputed dataset
@@ -5011,9 +5091,43 @@ corr.table[, 3:4] <- lapply(corr.table[, 3:4], function(x) as.numeric(as.charact
   lapply(function(x) round(x, 5)) # Set the numeric columns to numeric and round to 5 decimals
 corr.table[, "cohen.d"] <- r2d(corr.table[, "rho"]) # Compute cohen's d
 corr.table[, "Model"] <- mod # Save the lm model number
+## Bayes factors
+# Initialize variables
+BFest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the BayesFactors estimates
+varest <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = m) # Matrix to put the variance of the dependent variable
+est <- matrix(NA, nrow = nrow(sum.lm.imp), ncol = 1) # Matrix to put the pooled estimates
+# Loop over all imputed Data_longs
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed Data_longs
+  subdata <- Data_long %>% filter(imp == j) # Select imputed Data_long
+  BF <- generalTestBF(formula = as.formula(fit.lm.imp[["call"]][["formula"]]), # Calculate BayesFactor
+                      data = subdata, whichModels = "bottom", progress = FALSE)
+  BFest[, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactors
+  # Calculate the standard error of the estimate per variable (necessary for pooling)
+  for (i in 1:nrow(sum.lm.imp)) { # Loop over all variables/models
+    if (grepl(":", sum.lm.imp[i, "Var"])) { # If the variable contains an interaction
+      Var <- sub("\\:.*", "", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Select the variable name before ":"
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else if (grepl("SexFemale", sum.lm.imp[i, "Var"])) { # If the main effect contains Sex
+      Var <- sub("SexFemale", "Sex", grep(":", sum.lm.imp[i, "Var"], value = TRUE)) # Rename SexFemale to Sex
+      varest[i, j] <- mean(c( var(subdata[, Var]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    } else { # For 'normal' variables
+      varest[i, j] <- mean(c( var(subdata[, sum.lm.imp[i, "Var"]]), var(subdata[, sum.lm.imp[i, "Dep"]]) )) / 
+        n.obs 
+    }
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:nrow(sum.lm.imp)) { # For every variable
+  est[i, 1] <- pool.scalar(BFest[i, ], varest[i, ], n = n.obs, k = 1)[["qbar"]] %>% unlist() %>% round(3)
+}
+# Add bayes factors to dataframe
+sum.lm.imp[, "BF"] <- est
 # Save results
 rownames(sum.lm.imp) <- NULL # Reset rownames of regression table
-lm.table <- rbind(lm.table, sum.lm.imp[-1, ]) # Save regression table without the intercept
+lm.table <- rbind(lm.table, sum.lm.imp) # Save regression table
 corrs <- rbind(corrs, corr.table) # Save correlation table
 multicol.table <- rbind(multicol.table, multicol.table.2) # Save multicollinearity
 rsqr.imp <- rbind(rsqr.imp, pool.rsqr.imp) # Save R-squared results
@@ -5022,6 +5136,7 @@ rsqr.imp <- rbind(rsqr.imp, pool.rsqr.imp) # Save R-squared results
 ### Export VIF and R-squared
 rownames(rsqr.imp) <- NULL # Reset rownames
 write.xlsx(rsqr.imp, "lm.rsqr_SET_CFC.outl.del.imp.xlsx") # Export R-squared results
+rownames(multicol.table) <- NULL # Reset rownames
 multicol.table[I(nrow(multicol.table)+1), "min_VIF"] <- multicol.table[, "min_VIF"] %>% min() # Add overall min in a new row
 multicol.table[nrow(multicol.table), "max_VIF"] <- multicol.table[-nrow(multicol.table), "max_VIF"] %>% max() # Add overall max
 multicol.table[nrow(multicol.table), "model"] <- "Total"
@@ -5034,6 +5149,7 @@ rownames(lm.table) <- NULL # Reset rownames of regression table
 lm.table[, "p.adj"] <- p.adjust(lm.table[ ,5], method = "fdr", n = nrow(lm.table)) # Do fdr-correction
 lm.table[, "p.adj.sig"] <- sapply(lm.table[, "p.adj"], function(x) p.value.sig(x)) # Add column with corrected significance
 lm.table[, "p.value.sig"] <- sapply(lm.table[, "p.value"], function(x) p.value.sig(x)) # Add column with uncorrected significance
+lm.table[, "BF.evidence"] <- sapply(lm.table[, "BF"], function(x) BF.evidence(x)) # Add column with Bayes factor interpretation
 write.xlsx(lm.table, "lm.SET_CFC.outl.del.imp.xlsx") # Export results
 
 # For partial correlations
@@ -5042,6 +5158,7 @@ corrs[, "p.adj.sig"] <- sapply(corrs[, "p.adj"], function(x) p.value.sig(x)) # A
 corrs[, "p.value.sig"] <- sapply(corrs[, "p.value"], function(x) p.value.sig(x)) # Add column with uncorrected significance
 corrs[, "cohen.d.mag"] <- sapply(corrs[, "cohen.d"], function(x) cohen.d.magnitude(x)) # Add column with cohen's d magnitude
 write.xlsx(corrs, "lm.corrs_SET_CFC.outl.del.imp.xlsx") # Export results
+
 
 ## Remove temporary variables
 remove(Data)
@@ -5069,10 +5186,18 @@ remove(a, b, c, d, e, f)
 remove(form)
 remove(pred)
 remove(cohen.d.magnitude)
+remove(BF.evidence)
+remove(m)
+remove(Data_long)
+remove(subdata)
+remove(BF)
+remove(n.obs)
+remove(BFest)
+remove(varest)
+remove(est)
 
 
-
-# Scatterplots of significant associations --------------------------------
+# Scatterplots of interesting associations --------------------------------
 
 ## Packages
 library(grid) # To organize multiple subplots in one large plot
@@ -5088,14 +5213,17 @@ library(miceadds) # For multiple imputed correlation
 # Load data
 load("SET_CFC.outl.del.imp.RData")
 
+# Select imputed dataset to illustrate
+m <- 1
+
 ### Scatterplots
-tiff("Scatter_SigCorrs.tiff", width = 50, height = 20, units = "cm", res = 300) # Save TIFF file
+tiff("Scatter_SigCorrs.tiff", width = 75, height = 20, units = "cm", res = 300) # Save TIFF file
 
 ## Figure 1: RS_Parietal_Avg_dPAC_Z with RSA.2
 corr <- micombine.cor(mi.res = SET_CFC.outl.del.imp, variables =  # Calculate spearman correlation
                         c("RSA.2", "RS_Parietal_Avg_dPAC_Z"))
 corr <- corr[1, "r"] %>% round(2) # Extract correlation coefficient and round
-data <- mice::complete(SET_CFC.outl.del.imp, action = 1) # Select the first imputed dataset for illustration purposes
+data <- mice::complete(SET_CFC.outl.del.imp, m) # # Select a imputed dataset for illustration purposes
 Fig1 <- ggplot(data, aes(x = RSA.2, y = RS_Parietal_Avg_dPAC_Z)) + # Make a plot
   geom_point(shape = 1, size = 2, stroke = 1.5) + # Add large hollow scatter point
   geom_smooth(method = lm, colour = "black", size = 1.5) + # Add a thick black regression line
@@ -5114,16 +5242,16 @@ Fig1 <- ggplot(data, aes(x = RSA.2, y = RS_Parietal_Avg_dPAC_Z)) + # Make a plot
 print(Fig1)
 
 
-## Figure 2: react_Parietal_Avg_AAC_R with pep.react
+## Figure 2: react_Parietal_Avg_AAC_R with LSAS
 corr <- micombine.cor(mi.res = SET_CFC.outl.del.imp, variables =  # Calculate spearman correlation
-                        c("pep.react", "react_Parietal_Avg_AAC_R"))
+                        c("LSAS", "react_Parietal_Avg_AAC_R"))
 corr <- corr[1, "r"] %>% round(2) # Extract correlation coefficient and round
-data <- mice::complete(SET_CFC.outl.del.imp, action = 1) # Select the first imputed dataset for illustration purposes
-Fig2 <- ggplot(data, aes(x = pep.react, y = react_Parietal_Avg_AAC_R)) + # Make a plot
+data <- mice::complete(SET_CFC.outl.del.imp, m) # # Select a imputed dataset for illustration purposes
+Fig2 <- ggplot(data, aes(x = LSAS, y = react_Parietal_Avg_AAC_R)) + # Make a plot
   geom_point(shape = 1, size = 2, stroke = 1.5) + # Add large hollow scatter point
   geom_smooth(method = lm, colour = "black", size = 1.5) + # Add a thick black regression line
-  labs(title="Reactivity of parietal AAC vs. PEP", # Add a title, axis labels, and a subtitle
-       y = "Parietal AAC reactivity (corr.)", x = "PEP reactivity (ms)",
+  labs(title="Reactivity of parietal AAC vs. Trait anxiety", # Add a title, axis labels, and a subtitle
+       y = "Parietal AAC reactivity (corr.)", x = "Trait social anxiety",
        subtitle = "b)", 
        caption = bquote(italic("r =") ~ .(corr) ) ) + # Show correlation coefficient in caption
   theme_classic() + # Remove background and gridlines
@@ -5137,15 +5265,38 @@ Fig2 <- ggplot(data, aes(x = pep.react, y = react_Parietal_Avg_AAC_R)) + # Make 
 print(Fig2)
 
 
+## Figure 3: react_Parietal_Avg_AAC_R with pep.react
+corr <- micombine.cor(mi.res = SET_CFC.outl.del.imp, variables =  # Calculate spearman correlation
+                        c("pep.react", "react_Parietal_Avg_AAC_R"))
+corr <- corr[1, "r"] %>% round(2) # Extract correlation coefficient and round
+data <- mice::complete(SET_CFC.outl.del.imp, m) # # Select a imputed dataset for illustration purposes
+Fig3 <- ggplot(data, aes(x = pep.react, y = react_Parietal_Avg_AAC_R)) + # Make a plot
+  geom_point(shape = 1, size = 2, stroke = 1.5) + # Add large hollow scatter point
+  geom_smooth(method = lm, colour = "black", size = 1.5) + # Add a thick black regression line
+  labs(title="Reactivity of parietal AAC vs. PEP", # Add a title, axis labels, and a subtitle
+       y = "Parietal AAC reactivity (corr.)", x = "PEP reactivity (ms)",
+       subtitle = "c)", 
+       caption = bquote(italic("r =") ~ .(corr) ) ) + # Show correlation coefficient in caption
+  theme_classic() + # Remove background and gridlines
+  theme(
+    axis.title = element_text(size = 15), # Increase size of axis labels
+    axis.text = element_text(size = 14, colour = "black"), # Increase size of axis ticks
+    plot.title = element_text(size = 20, hjust = 0.5, face = "bold"), # Increase size of bold title and align in the middle
+    plot.subtitle = element_text(size = 20, face = "bold"), # Increase size of subtitle and make bold
+    plot.caption = element_text(size = 15, hjust = 0) # Increase size of subcaption and place left
+  )
+print(Fig3)
+
 # Arrange plots side-by-side
-grid.arrange(Fig1, Fig2, nrow = 1)
+grid.arrange(Fig1, Fig2, Fig3, nrow = 1)
 # Print Figure
 dev.off()
 
 ## Remove temporary variables
-remove(Fig1, Fig2)
+remove(Fig1, Fig2, Fig3)
 remove(data)
 remove(corr)
+remove(m)
 
 
 # Heatmap correlations per LSAS group (exloratory) -----------------------------------------------------
