@@ -582,68 +582,8 @@ par(restore)
 tiff("FIG2.tiff", width = 40, height = 37.5, units = "cm", res = 300) # Save TIFF file
 par(mfrow = c(3, 2), oma = c(0, 0, 5, 0), mar = c(4, 5, 5, 2), family = "serif") # Create multiple plots in one figure, with some extra margins on top and left
 
-## A) State anxiety
-# Main plot
-plot(NA, # No data yet
-     axes = FALSE, # Remove axes to draw self
-     xlim = c(-30, 60), # Set limits of x-axis
-     ylim = c(5, 65), # Set limits of y-axis
-     xlab = "", # Leave label of x-axis empty to add later (more inwards)
-     ylab = "", # Leave label of y-axis empty to add later (more inwards)
-     main = "") # Leave title empty to add later (more inwards)
-# Add background colors
-rect(xleft = 0, # Preparatory SET manipulation (light pink)
-     ybottom = 5,
-     xright = 13,
-     ytop = 65,
-     col = "pink",
-     lty = 0) # Don't add border
-rect(xleft = 13, # SET (dark pink)
-     ybottom = 5,
-     xright = 18,
-     ytop = 65,
-     col = "pink2",
-     lty = 0) # Don't add border
-# Add grid lines
-segments(x0 = -30, y0 = 65, x1 = 60, y1 = 65, col = "grey50", lwd = 1)
-segments(x0 = -30, y0 = 45, x1 = 60, y1 = 45, col = "grey50", lwd = 1)
-segments(x0 = -30, y0 = 25, x1 = 60, y1 = 25, col = "grey50", lwd = 1)
-# Add axes
-axis(1, pos = 5, cex.axis = 2.5, at = seq(-30, 60, 15)) # Draw new x-axis, with a slightly smaller size
-axis(2, pos = -30, cex.axis = 2.5, las = 1, at = seq(5, 65, 20)) # Draw new y-axis, with a slightly smaller size and horizontal labels
-# Add data
-lines(x = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-      y = imp.summary["Mean", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")], # Means of measurements
-      pch = 17, # Use filled triangles
-      type = "l", # Plot lines
-      lwd = 2.2, # Make line width thicker
-      col = "grey10") # Make line almost-black
-# Add error bars
-arrows(x0 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-       y0 = as.numeric(imp.summary["Mean", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] + imp.summary["Standard error of the mean", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means plus SE
-       x1 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-       y1 = as.numeric(imp.summary["Mean", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] - imp.summary["Standard error of the mean", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means minus SE
-       length = 0.05, # Size of cap
-       angle = 90, # Draw vertical lines
-       code = 3, # Draw lines of cap on both sides
-       lwd = 1.75) # Make line width slightly thicker 
-# Add x-axis label
-title(xlab = "Time (min) respective to start SET", # X label
-      cex.lab = 2.5, # Increase size
-      line = 2) # Move inwards
-# Add y-axis label
-title(ylab = "Visual analogue scale (0 - 100)", # Y label
-      cex.lab = 2.5, # Increase size
-      line = 2) # Move outwards
-# Add title
-title(main = "State anxiety", # Title of plot
-      cex.main = 3.5, # Increase size
-      line = 0.5) # Move slightly inwards
-# Figure number
-mtext(bquote(bold("a)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left (moved slightly to the right)
 
-
-## B) Pre-ejection period
+## A) Pre-ejection period
 # Main plot
 plot(NA, # No data yet
      axes = FALSE, # Remove axes to draw self
@@ -702,11 +642,11 @@ title(main = "Pre-ejection period", # Title of plot
       cex.main = 3.5, # Increase size
       line = 0.5) # Move slightly inwards
 # Figure number
-mtext(bquote(bold("b)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
+mtext(bquote(bold("a)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
 
 
 
-## C) Respiratory sinus arrythmia
+## B) Respiratory sinus arrythmia
 # Main plot
 plot(NA, # No data yet
      axes = FALSE, # Remove axes to draw self
@@ -764,10 +704,10 @@ title(main = "Respiratory sinus arrythmia", # Title of plot
       cex.main = 3.5, # Increase size
       line = 0.5) # Move slightly inwards
 # Figure number
-mtext(bquote(bold("c)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
+mtext(bquote(bold("b)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
 
 
-## D) Respiratory rate
+## C) Respiratory rate
 # Main plot
 plot(NA, # No data yet
      axes = FALSE, # Remove axes to draw self
@@ -826,7 +766,68 @@ title(main = "Respiratory rate", # Title of plot
       cex.main = 3.5, # Increase size
       line = 0.5) # Move slightly inwards
 # Figure number
-mtext(bquote(bold("d)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
+mtext(bquote(bold("c)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
+
+
+## D) State anxiety
+# Main plot
+plot(NA, # No data yet
+     axes = FALSE, # Remove axes to draw self
+     xlim = c(-30, 60), # Set limits of x-axis
+     ylim = c(5, 65), # Set limits of y-axis
+     xlab = "", # Leave label of x-axis empty to add later (more inwards)
+     ylab = "", # Leave label of y-axis empty to add later (more inwards)
+     main = "") # Leave title empty to add later (more inwards)
+# Add background colors
+rect(xleft = 0, # Preparatory SET manipulation (light pink)
+     ybottom = 5,
+     xright = 13,
+     ytop = 65,
+     col = "pink",
+     lty = 0) # Don't add border
+rect(xleft = 13, # SET (dark pink)
+     ybottom = 5,
+     xright = 18,
+     ytop = 65,
+     col = "pink2",
+     lty = 0) # Don't add border
+# Add grid lines
+segments(x0 = -30, y0 = 65, x1 = 60, y1 = 65, col = "grey50", lwd = 1)
+segments(x0 = -30, y0 = 45, x1 = 60, y1 = 45, col = "grey50", lwd = 1)
+segments(x0 = -30, y0 = 25, x1 = 60, y1 = 25, col = "grey50", lwd = 1)
+# Add axes
+axis(1, pos = 5, cex.axis = 2.5, at = seq(-30, 60, 15)) # Draw new x-axis, with a slightly smaller size
+axis(2, pos = -30, cex.axis = 2.5, las = 1, at = seq(5, 65, 20)) # Draw new y-axis, with a slightly smaller size and horizontal labels
+# Add data
+lines(x = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+      y = imp.summary["Mean", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")], # Means of measurements
+      pch = 17, # Use filled triangles
+      type = "l", # Plot lines
+      lwd = 2.2, # Make line width thicker
+      col = "grey10") # Make line almost-black
+# Add error bars
+arrows(x0 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+       y0 = as.numeric(imp.summary["Mean", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] + imp.summary["Standard error of the mean", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means plus SE
+       x1 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+       y1 = as.numeric(imp.summary["Mean", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] - imp.summary["Standard error of the mean", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means minus SE
+       length = 0.05, # Size of cap
+       angle = 90, # Draw vertical lines
+       code = 3, # Draw lines of cap on both sides
+       lwd = 1.75) # Make line width slightly thicker 
+# Add x-axis label
+title(xlab = "Time (min) respective to start SET", # X label
+      cex.lab = 2.5, # Increase size
+      line = 2) # Move inwards
+# Add y-axis label
+title(ylab = "Visual analogue scale (0 - 100)", # Y label
+      cex.lab = 2.5, # Increase size
+      line = 2) # Move outwards
+# Add title
+title(main = "State anxiety", # Title of plot
+      cex.main = 3.5, # Increase size
+      line = 0.5) # Move slightly inwards
+# Figure number
+mtext(bquote(bold("d)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left (moved slightly to the right)
 
 
 ## E) Cortisol
@@ -1294,86 +1295,8 @@ par(restore)
 tiff("FIG2_sex.tiff", width = 40, height = 37.5, units = "cm", res = 300) # Save TIFF file
 par(mfrow = c(3, 2), oma = c(0, 0, 5, 0), mar = c(4, 5, 5, 2), family = "serif") # Create multiple plots in one figure, with some extra margins on top and left
 
-## A) State anxiety
-# Main plot
-plot(NA, # No data yet
-     axes = FALSE, # Remove axes to draw self
-     xlim = c(-30, 60), # Set limits of x-axis
-     ylim = c(5, 65), # Set limits of y-axis
-     xlab = "", # Leave label of x-axis empty to add later (more inwards)
-     ylab = "", # Leave label of y-axis empty to add later (more inwards)
-     main = "") # Leave title empty to add later (more inwards)
-# Add background colors
-rect(xleft = 0, # Preparatory SET manipulation (light pink)
-     ybottom = 5,
-     xright = 13,
-     ytop = 65,
-     col = "pink",
-     lty = 0) # Don't add border
-rect(xleft = 13, # SET (dark pink)
-     ybottom = 5,
-     xright = 18,
-     ytop = 65,
-     col = "pink2",
-     lty = 0) # Don't add border
-# Add grid lines
-segments(x0 = -30, y0 = 65, x1 = 60, y1 = 65, col = "grey50", lwd = 1)
-segments(x0 = -30, y0 = 45, x1 = 60, y1 = 45, col = "grey50", lwd = 1)
-segments(x0 = -30, y0 = 25, x1 = 60, y1 = 25, col = "grey50", lwd = 1)
-# Add axes
-axis(1, pos = 5, cex.axis = 2.5, at = seq(-30, 60, 15)) # Draw new x-axis, with a slightly smaller size
-axis(2, pos = -30, cex.axis = 2.5, las = 1, at = seq(5, 65, 20)) # Draw new y-axis, with a slightly smaller size and horizontal labels
-# Add men data
-lines(x = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-      y = imp.summary.sex["Mean: Male", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")], # Means of measurements
-      pch = 17, # Use filled triangles
-      type = "l", # Plot lines
-      lwd = 2.2, # Make line width thicker
-      col = "grey10") # Make line almost-black
-# Add men error bars
-arrows(x0 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-       y0 = as.numeric(imp.summary.sex["Mean: Male", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] + imp.summary.sex["Standard error of the mean: Male", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means plus SE
-       x1 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-       y1 = as.numeric(imp.summary.sex["Mean: Male", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] - imp.summary.sex["Standard error of the mean: Male", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means minus SE
-       length = 0.05, # Size of cap
-       angle = 90, # Draw vertical lines
-       code = 3, # Draw lines of cap on both sides
-       lwd = 1.75) # Make line width slightly thicker 
-# Add women data
-lines(x = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-      y = imp.summary.sex["Mean: Female", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")], # Means of measurements
-      pch = 19, # Use filled circles
-      type = "l", # Plot lines
-      col = "grey40", # Draw lines in dark grey
-      lty = 5, # Dashed (long) lines
-      lwd = 2.5) # Make line width thicker
-# Add women error bars
-arrows(x0 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-       y0 = as.numeric(imp.summary.sex["Mean: Female", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] + imp.summary.sex["Standard error of the mean: Female", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means plus SE
-       x1 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-       y1 = as.numeric(imp.summary.sex["Mean: Female", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] - imp.summary.sex["Standard error of the mean: Female", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means minus SE
-       length = 0.05, # Size of cap
-       angle = 90, # Draw vertical lines
-       code = 3, # Draw lines of cap on both sides
-       lwd = 2,  # Make line width slightly thicker 
-       col = "grey40") # Make error bars dark grey
-# Add x-axis label
-title(xlab = "Time (min) respective to start SET", # X label
-      cex.lab = 2.5, # Increase size
-      line = 2) # Move inwards
-# Add y-axis label
-title(ylab = "Visual analogue scale (0 - 100)", # Y label
-      cex.lab = 2.5, # Increase size
-      line = 2) # Move outwards
-# Add title
-title(main = "State anxiety", # Title of plot
-      cex.main = 3.5, # Increase size
-      line = 0.5) # Move slightly inwards
-# Figure number
-mtext(bquote(bold("a)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left (moved slightly to the right)
 
-
-## B) Pre-ejection period
+## A) Pre-ejection period
 # Main plot
 plot(NA, # No data yet
      axes = FALSE, # Remove axes to draw self
@@ -1450,10 +1373,10 @@ title(main = "Pre-ejection period", # Title of plot
       cex.main = 3.5, # Increase size
       line = 0.5) # Move slightly inwards
 # Figure number
-mtext(bquote(bold("b)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
+mtext(bquote(bold("a)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
 
 
-## C) Respiratory sinus arrythmia
+## B) Respiratory sinus arrythmia
 # Main plot
 plot(NA, # No data yet
      axes = FALSE, # Remove axes to draw self
@@ -1529,10 +1452,10 @@ title(main = "Respiratory sinus arrythmia", # Title of plot
       cex.main = 3.5, # Increase size
       line = 0.5) # Move slightly inwards
 # Figure number
-mtext(bquote(bold("c)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
+mtext(bquote(bold("b)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
 
 
-## D) Respiratory rate
+## C) Respiratory rate
 # Main plot
 plot(NA, # No data yet
      axes = FALSE, # Remove axes to draw self
@@ -1609,7 +1532,86 @@ title(main = "Respiratory rate", # Title of plot
       cex.main = 3.5, # Increase size
       line = 0.5) # Move slightly inwards
 # Figure number
-mtext(bquote(bold("d)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
+mtext(bquote(bold("c)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
+
+
+## D) State anxiety
+# Main plot
+plot(NA, # No data yet
+     axes = FALSE, # Remove axes to draw self
+     xlim = c(-30, 60), # Set limits of x-axis
+     ylim = c(5, 65), # Set limits of y-axis
+     xlab = "", # Leave label of x-axis empty to add later (more inwards)
+     ylab = "", # Leave label of y-axis empty to add later (more inwards)
+     main = "") # Leave title empty to add later (more inwards)
+# Add background colors
+rect(xleft = 0, # Preparatory SET manipulation (light pink)
+     ybottom = 5,
+     xright = 13,
+     ytop = 65,
+     col = "pink",
+     lty = 0) # Don't add border
+rect(xleft = 13, # SET (dark pink)
+     ybottom = 5,
+     xright = 18,
+     ytop = 65,
+     col = "pink2",
+     lty = 0) # Don't add border
+# Add grid lines
+segments(x0 = -30, y0 = 65, x1 = 60, y1 = 65, col = "grey50", lwd = 1)
+segments(x0 = -30, y0 = 45, x1 = 60, y1 = 45, col = "grey50", lwd = 1)
+segments(x0 = -30, y0 = 25, x1 = 60, y1 = 25, col = "grey50", lwd = 1)
+# Add axes
+axis(1, pos = 5, cex.axis = 2.5, at = seq(-30, 60, 15)) # Draw new x-axis, with a slightly smaller size
+axis(2, pos = -30, cex.axis = 2.5, las = 1, at = seq(5, 65, 20)) # Draw new y-axis, with a slightly smaller size and horizontal labels
+# Add men data
+lines(x = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+      y = imp.summary.sex["Mean: Male", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")], # Means of measurements
+      pch = 17, # Use filled triangles
+      type = "l", # Plot lines
+      lwd = 2.2, # Make line width thicker
+      col = "grey10") # Make line almost-black
+# Add men error bars
+arrows(x0 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+       y0 = as.numeric(imp.summary.sex["Mean: Male", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] + imp.summary.sex["Standard error of the mean: Male", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means plus SE
+       x1 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+       y1 = as.numeric(imp.summary.sex["Mean: Male", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] - imp.summary.sex["Standard error of the mean: Male", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means minus SE
+       length = 0.05, # Size of cap
+       angle = 90, # Draw vertical lines
+       code = 3, # Draw lines of cap on both sides
+       lwd = 1.75) # Make line width slightly thicker 
+# Add women data
+lines(x = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+      y = imp.summary.sex["Mean: Female", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")], # Means of measurements
+      pch = 19, # Use filled circles
+      type = "l", # Plot lines
+      col = "grey40", # Draw lines in dark grey
+      lty = 5, # Dashed (long) lines
+      lwd = 2.5) # Make line width thicker
+# Add women error bars
+arrows(x0 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+       y0 = as.numeric(imp.summary.sex["Mean: Female", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] + imp.summary.sex["Standard error of the mean: Female", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means plus SE
+       x1 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+       y1 = as.numeric(imp.summary.sex["Mean: Female", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] - imp.summary.sex["Standard error of the mean: Female", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means minus SE
+       length = 0.05, # Size of cap
+       angle = 90, # Draw vertical lines
+       code = 3, # Draw lines of cap on both sides
+       lwd = 2,  # Make line width slightly thicker 
+       col = "grey40") # Make error bars dark grey
+# Add x-axis label
+title(xlab = "Time (min) respective to start SET", # X label
+      cex.lab = 2.5, # Increase size
+      line = 2) # Move inwards
+# Add y-axis label
+title(ylab = "Visual analogue scale (0 - 100)", # Y label
+      cex.lab = 2.5, # Increase size
+      line = 2) # Move outwards
+# Add title
+title(main = "State anxiety", # Title of plot
+      cex.main = 3.5, # Increase size
+      line = 0.5) # Move slightly inwards
+# Figure number
+mtext(bquote(bold("d)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left (moved slightly to the right)
 
 
 ## E) Cortisol
@@ -2109,86 +2111,8 @@ par(restore)
 tiff("FIG2_LSAS.tiff", width = 40, height = 37.5, units = "cm", res = 300) # Save TIFF file
 par(mfrow = c(3, 2), oma = c(0, 0, 5, 0), mar = c(4, 5, 5, 2), family = "serif") # Create multiple plots in one figure, with some extra margins on top and left
 
-## A) State anxiety
-# Main plot
-plot(NA, # No data yet
-     axes = FALSE, # Remove axes to draw self
-     xlim = c(-30, 60), # Set limits of x-axis
-     ylim = c(5, 65), # Set limits of y-axis
-     xlab = "", # Leave label of x-axis empty to add later (more inwards)
-     ylab = "", # Leave label of y-axis empty to add later (more inwards)
-     main = "") # Leave title empty to add later (more inwards)
-# Add background colors
-rect(xleft = 0, # Preparatory SET manipulation (light pink)
-     ybottom = 5,
-     xright = 13,
-     ytop = 65,
-     col = "pink",
-     lty = 0) # Don't add border
-rect(xleft = 13, # SET (dark pink)
-     ybottom = 5,
-     xright = 18,
-     ytop = 65,
-     col = "pink2",
-     lty = 0) # Don't add border
-# Add grid lines
-segments(x0 = -30, y0 = 65, x1 = 60, y1 = 65, col = "grey50", lwd = 1)
-segments(x0 = -30, y0 = 45, x1 = 60, y1 = 45, col = "grey50", lwd = 1)
-segments(x0 = -30, y0 = 25, x1 = 60, y1 = 25, col = "grey50", lwd = 1)
-# Add axes
-axis(1, pos = 5, cex.axis = 2.5, at = seq(-30, 60, 15)) # Draw new x-axis, with a slightly smaller size
-axis(2, pos = -30, cex.axis = 2.5, las = 1, at = seq(5, 65, 20)) # Draw new y-axis, with a slightly smaller size and horizontal labels
-# Add low LSAS data
-lines(x = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-      y = imp.summary.LSAS["Mean: Low LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")], # Means of measurements
-      pch = 17, # Use filled triangles
-      type = "l", # Plot lines
-      lwd = 2.2, # Make line width thicker
-      col = "grey10") # Make line almost-black
-# Add low LSAS error bars
-arrows(x0 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-       y0 = as.numeric(imp.summary.LSAS["Mean: Low LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] + imp.summary.LSAS["Standard error of the mean: Low LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means plus SE
-       x1 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-       y1 = as.numeric(imp.summary.LSAS["Mean: Low LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] - imp.summary.LSAS["Standard error of the mean: Low LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means minus SE
-       length = 0.05, # Size of cap
-       angle = 90, # Draw vertical lines
-       code = 3, # Draw lines of cap on both sides
-       lwd = 1.75) # Make line width slightly thicker 
-# Add high LSAS data
-lines(x = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-      y = imp.summary.LSAS["Mean: High LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")], # Means of measurements
-      pch = 19, # Use filled circles
-      type = "l", # Plot lines
-      col = "grey40", # Draw lines in dark grey
-      lty = 5, # Dashed (long) lines
-      lwd = 2.5) # Make line width thicker
-# Add high LSAS error bars
-arrows(x0 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-       y0 = as.numeric(imp.summary.LSAS["Mean: High LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] + imp.summary.LSAS["Standard error of the mean: High LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means plus SE
-       x1 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
-       y1 = as.numeric(imp.summary.LSAS["Mean: High LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] - imp.summary.LSAS["Standard error of the mean: High LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means minus SE
-       length = 0.05, # Size of cap
-       angle = 90, # Draw vertical lines
-       code = 3, # Draw lines of cap on both sides
-       lwd = 2,  # Make line width slightly thicker 
-       col = "grey40") # Make error bars dark grey
-# Add x-axis label
-title(xlab = "Time (min) respective to start SET", # X label
-      cex.lab = 2.5, # Increase size
-      line = 2) # Move inwards
-# Add y-axis label
-title(ylab = "Visual analogue scale (0 - 100)", # Y label
-      cex.lab = 2.5, # Increase size
-      line = 2) # Move outwards
-# Add title
-title(main = "State anxiety", # Title of plot
-      cex.main = 3.5, # Increase size
-      line = 0.5) # Move slightly inwards
-# Figure number
-mtext(bquote(bold("a)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left (moved slightly to the right)
 
-
-## B) Pre-ejection period
+## A) Pre-ejection period
 # Main plot
 plot(NA, # No data yet
      axes = FALSE, # Remove axes to draw self
@@ -2265,10 +2189,10 @@ title(main = "Pre-ejection period", # Title of plot
       cex.main = 3.5, # Increase size
       line = 0.5) # Move slightly inwards
 # Figure number
-mtext(bquote(bold("b)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
+mtext(bquote(bold("a)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
 
 
-## C) Respiratory sinus arrythmia
+## B) Respiratory sinus arrythmia
 # Main plot
 plot(NA, # No data yet
      axes = FALSE, # Remove axes to draw self
@@ -2344,10 +2268,10 @@ title(main = "Respiratory sinus arrythmia", # Title of plot
       cex.main = 3.5, # Increase size
       line = 0.5) # Move slightly inwards
 # Figure number
-mtext(bquote(bold("c)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
+mtext(bquote(bold("b)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
 
 
-## D) Respiratory rate
+## C) Respiratory rate
 # Main plot
 plot(NA, # No data yet
      axes = FALSE, # Remove axes to draw self
@@ -2425,7 +2349,86 @@ title(main = "Respiratory rate", # Title of plot
       cex.main = 3.5, # Increase size
       line = 0.5) # Move slightly inwards
 # Figure number
-mtext(bquote(bold("d)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
+mtext(bquote(bold("c)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left
+
+
+## D) State anxiety
+# Main plot
+plot(NA, # No data yet
+     axes = FALSE, # Remove axes to draw self
+     xlim = c(-30, 60), # Set limits of x-axis
+     ylim = c(5, 65), # Set limits of y-axis
+     xlab = "", # Leave label of x-axis empty to add later (more inwards)
+     ylab = "", # Leave label of y-axis empty to add later (more inwards)
+     main = "") # Leave title empty to add later (more inwards)
+# Add background colors
+rect(xleft = 0, # Preparatory SET manipulation (light pink)
+     ybottom = 5,
+     xright = 13,
+     ytop = 65,
+     col = "pink",
+     lty = 0) # Don't add border
+rect(xleft = 13, # SET (dark pink)
+     ybottom = 5,
+     xright = 18,
+     ytop = 65,
+     col = "pink2",
+     lty = 0) # Don't add border
+# Add grid lines
+segments(x0 = -30, y0 = 65, x1 = 60, y1 = 65, col = "grey50", lwd = 1)
+segments(x0 = -30, y0 = 45, x1 = 60, y1 = 45, col = "grey50", lwd = 1)
+segments(x0 = -30, y0 = 25, x1 = 60, y1 = 25, col = "grey50", lwd = 1)
+# Add axes
+axis(1, pos = 5, cex.axis = 2.5, at = seq(-30, 60, 15)) # Draw new x-axis, with a slightly smaller size
+axis(2, pos = -30, cex.axis = 2.5, las = 1, at = seq(5, 65, 20)) # Draw new y-axis, with a slightly smaller size and horizontal labels
+# Add low LSAS data
+lines(x = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+      y = imp.summary.LSAS["Mean: Low LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")], # Means of measurements
+      pch = 17, # Use filled triangles
+      type = "l", # Plot lines
+      lwd = 2.2, # Make line width thicker
+      col = "grey10") # Make line almost-black
+# Add low LSAS error bars
+arrows(x0 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+       y0 = as.numeric(imp.summary.LSAS["Mean: Low LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] + imp.summary.LSAS["Standard error of the mean: Low LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means plus SE
+       x1 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+       y1 = as.numeric(imp.summary.LSAS["Mean: Low LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] - imp.summary.LSAS["Standard error of the mean: Low LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means minus SE
+       length = 0.05, # Size of cap
+       angle = 90, # Draw vertical lines
+       code = 3, # Draw lines of cap on both sides
+       lwd = 1.75) # Make line width slightly thicker 
+# Add high LSAS data
+lines(x = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+      y = imp.summary.LSAS["Mean: High LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")], # Means of measurements
+      pch = 19, # Use filled circles
+      type = "l", # Plot lines
+      col = "grey40", # Draw lines in dark grey
+      lty = 5, # Dashed (long) lines
+      lwd = 2.5) # Make line width thicker
+# Add high LSAS error bars
+arrows(x0 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+       y0 = as.numeric(imp.summary.LSAS["Mean: High LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] + imp.summary.LSAS["Standard error of the mean: High LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means plus SE
+       x1 = c(-19, 11, 19, 30, 35, 40, 45, 50), # Time points of measurements, relative to start SET manipulation
+       y1 = as.numeric(imp.summary.LSAS["Mean: High LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")] - imp.summary.LSAS["Standard error of the mean: High LSAS", c("Anx.1", "Anx.2", "Anx.3", "Anx.4", "Anx.5", "Anx.6", "Anx.7", "Anx.8")]), # Means minus SE
+       length = 0.05, # Size of cap
+       angle = 90, # Draw vertical lines
+       code = 3, # Draw lines of cap on both sides
+       lwd = 2,  # Make line width slightly thicker 
+       col = "grey40") # Make error bars dark grey
+# Add x-axis label
+title(xlab = "Time (min) respective to start SET", # X label
+      cex.lab = 2.5, # Increase size
+      line = 2) # Move inwards
+# Add y-axis label
+title(ylab = "Visual analogue scale (0 - 100)", # Y label
+      cex.lab = 2.5, # Increase size
+      line = 2) # Move outwards
+# Add title
+title(main = "State anxiety", # Title of plot
+      cex.main = 3.5, # Increase size
+      line = 0.5) # Move slightly inwards
+# Figure number
+mtext(bquote(bold("d)")), side = 3, adj = -0.03, cex = 2.5) # Add the number of the subfigure top left (moved slightly to the right)
 
 
 ## E) Cortisol
@@ -4044,6 +4047,116 @@ remove(highData)
 remove(lowData)
 
 
+# Correlations AAC with PAC reactivity (exploratory) ------------------------------------------------------------
+
+# Packages
+library(mice) # Multiple imputation functions
+library(dplyr) # Data transformation
+library(magrittr) # Piping
+library(xlsx) # Exporting to Excel
+library(miceadds) # Multiple imputation correlation
+library(psych) # For converting rho to Cohen's d
+library(BayesFactor) # For Bayesian statistics
+source('cohen.d.magnitude.R') # Custom function to check the magnitude of Cohen's d values
+source('p.value.sig.R') # Custom function to check the significance of p.values
+source('BF.evidence.R') # Custom function to check the interpretation of Bayes Factors
+
+
+# Load data
+load("SET_CFC.outl.del.imp.RData")
+
+
+## Correlations
+corr <- micombine.cor(mi.res = SET_CFC.outl.del.imp, variables = 
+                        c("react_Frontal_Avg_dPAC_Z",
+                          "react_Frontal_Avg_AAC_R",
+                          "react_Parietal_Avg_dPAC_Z",
+                          "react_Parietal_Avg_AAC_R"))
+# Remove double rows (second half)
+corr <- corr[c(1:I(nrow(corr) / 2)), ]
+
+
+## Calculate BayesFactors
+# Select data
+Dataset <- mice::complete(SET_CFC.outl.del.imp, action = "long")
+Dataset <- select(Dataset, c(".imp", "react_Frontal_Avg_dPAC_Z",
+                             "react_Frontal_Avg_AAC_R",
+                             "react_Parietal_Avg_dPAC_Z",
+                             "react_Parietal_Avg_AAC_R"))
+colnames(Dataset)[1] <- "imp"
+# Initialize variables
+m <- SET_CFC.outl.del.imp$m # Number of imputed datasets
+corrBF <- matrix(NA, nrow = nrow(corr), ncol = m) # Matrix to put the BayesFactors per imputed dataset
+n.obs <- matrix(NA, nrow = nrow(corr), ncol = m) # Matrix to put the number of observations
+correst <- matrix(NA, nrow = nrow(corr), ncol = m) # Matrix to put the variance of the variables per imputed dataset
+est <- matrix(NA, nrow = nrow(corr), ncol = 1) # Matrix to put the pooled estimates
+# Loop over all imputed datasets
+for (j in 1:m) { # For all imputed datasets
+  subdata <- Dataset %>% filter(imp == j) %>% select(-imp) %>% as.matrix() # Select imputed dataset
+  for (i in 1:nrow(corr)) { # For all variables in the data
+    BF <- correlationBF(y = subdata[, corr[i, "variable1"]], x = subdata[, corr[i, "variable2"]]) # Calculate BayesFactor
+    corrBF[i, j] <- extractBF(BF, onlybf = TRUE) # Extract only the BayesFactor
+    n.obs[i, j] <- length(subdata[, corr[i, "variable1"]]) # Calculate sample size
+    correst[i, j] <- mean( c(var(subdata[, corr[i, "variable1"]]), var(subdata[, corr[i, "variable2"]])) ) / n.obs[i, j] # The standard error of the estimate (necessary for pooling)
+  }
+}
+# Pool the descriptives into one estimate with three decimals for all vars
+for (i in 1:nrow(corr)) { # For every variable
+  est[i, 1] <- pool.scalar(corrBF[i, ], correst[i, ], n = n.obs[i,], k = 1)[["qbar"]] %>% unlist() %>% round(3)
+}
+
+# Add bayes factors to dataframe
+corr[, "BF"] <- est
+# Add column with Bayes factor interpretation
+corr[, "BF.evidence"] <- sapply(corr$BF, function(x) BF.evidence(x)) # Add column with interpretation
+
+## Structure correlation table
+rownames(corr) <- NULL # Reset rownames
+drops <- c("rse", "fisher_r", "fisher_rse", "fmi", "t", "lower95", "upper95") # Select unnecessary columns to remove
+corr <- corr[ , !(names(corr) %in% drops)] # Remove unnecessary columns
+
+# Do fdr-correction
+corr[, "p.value.adj"] <- p.adjust(corr[, "p"], method = "fdr", n = nrow(corr))
+# Check significance
+corr[, "p.adj.sig"] <- sapply(corr[, "p.value.adj"], function(x) p.value.sig(x)) # Corrected
+corr[, "p.value.sig"] <- sapply(corr[, "p"], function(x) p.value.sig(x)) # Uncorrected
+
+# Add Cohen's d
+rho <- corr[, "r"] # Extract rho
+d <-  r2d(rho) # Calculate Cohen's d from rho
+corr$cohen.d <- abs(d) # Put the absolute of Cohen's d in dataframe
+corr$cohen.d.mag <- sapply(corr$cohen.d, function(x) cohen.d.magnitude(x)) # Add column with magnitude of cohen's d
+
+
+# Order based on p-value
+corr <- corr %>% arrange(p)
+
+
+## Save results
+# base
+write.xlsx(corr, "SupplCorrelations_PAC_AAC.xlsx")
+
+
+## Remove temporary variables
+remove(corr)
+remove(p.value.sig)
+remove(subdata)
+remove(d)
+remove(drops)
+remove(i)
+remove(j)
+remove(m)
+remove(Dataset)
+remove(correst)
+remove(corrBF)
+remove(est)
+remove(n.obs)
+remove(rho)
+remove(BF.evidence)
+remove(BF)
+remove(cohen.d.magnitude)
+
+
 # Heatmap correlations (exloratory) -----------------------------------------------------
 ## Packages
 library(ggplot2) # For plotting
@@ -5134,9 +5247,12 @@ rsqr.imp <- rbind(rsqr.imp, pool.rsqr.imp) # Save R-squared results
 
 
 ### Export VIF and R-squared
+# For R-squared
 rownames(rsqr.imp) <- NULL # Reset rownames
 write.xlsx(rsqr.imp, "lm.rsqr_SET_CFC.outl.del.imp.xlsx") # Export R-squared results
+# For VIF
 rownames(multicol.table) <- NULL # Reset rownames
+multicol.table <- multicol.table[-c(grep("Zrr", multicol.table[, "var"], ignore.case = TRUE)), ] # Remove RR from results
 multicol.table[I(nrow(multicol.table)+1), "min_VIF"] <- multicol.table[, "min_VIF"] %>% min() # Add overall min in a new row
 multicol.table[nrow(multicol.table), "max_VIF"] <- multicol.table[-nrow(multicol.table), "max_VIF"] %>% max() # Add overall max
 multicol.table[nrow(multicol.table), "model"] <- "Total"
@@ -5144,15 +5260,17 @@ multicol.table[ , c(1, 2)] <- multicol.table[ , c(1, 2)] %>% round(2) # Round nu
 write.xlsx(multicol.table, "lm.VIF_SET_CFC.outl.del.imp.xlsx") # Export VIF results
 
 ### FDR-correction
-rownames(lm.table) <- NULL # Reset rownames of regression table
 # For regression
+lm.table <- lm.table[-c(grep("Zrr", lm.table[, "Var"], ignore.case = TRUE)), ] # Remove RR from results
+rownames(lm.table) <- NULL # Reset rownames
 lm.table[, "p.adj"] <- p.adjust(lm.table[ ,5], method = "fdr", n = nrow(lm.table)) # Do fdr-correction
 lm.table[, "p.adj.sig"] <- sapply(lm.table[, "p.adj"], function(x) p.value.sig(x)) # Add column with corrected significance
 lm.table[, "p.value.sig"] <- sapply(lm.table[, "p.value"], function(x) p.value.sig(x)) # Add column with uncorrected significance
 lm.table[, "BF.evidence"] <- sapply(lm.table[, "BF"], function(x) BF.evidence(x)) # Add column with Bayes factor interpretation
 write.xlsx(lm.table, "lm.SET_CFC.outl.del.imp.xlsx") # Export results
-
 # For partial correlations
+corrs <- corrs[-c(grep("Zrr", corrs[, "var1"], ignore.case = TRUE), grep("Zrr", corrs[, "var2"], ignore.case = TRUE)), ] # Remove RR from results
+rownames(corrs) <- NULL # Reset rownames
 corrs[, "p.adj"] <- p.adjust(corrs[,4], method = "fdr", n = nrow(corrs)) # Do fdr-correction
 corrs[, "p.adj.sig"] <- sapply(corrs[, "p.adj"], function(x) p.value.sig(x)) # Add column with corrected significance
 corrs[, "p.value.sig"] <- sapply(corrs[, "p.value"], function(x) p.value.sig(x)) # Add column with uncorrected significance
@@ -5242,16 +5360,16 @@ Fig1 <- ggplot(data, aes(x = RSA.2, y = RS_Parietal_Avg_dPAC_Z)) + # Make a plot
 print(Fig1)
 
 
-## Figure 2: react_Parietal_Avg_AAC_R with LSAS
+## Figure 2: react_Parietal_Avg_AAC_R with pep.react
 corr <- micombine.cor(mi.res = SET_CFC.outl.del.imp, variables =  # Calculate spearman correlation
-                        c("LSAS", "react_Parietal_Avg_AAC_R"))
+                        c("pep.react", "react_Parietal_Avg_AAC_R"))
 corr <- corr[1, "r"] %>% round(2) # Extract correlation coefficient and round
 data <- mice::complete(SET_CFC.outl.del.imp, m) # # Select a imputed dataset for illustration purposes
-Fig2 <- ggplot(data, aes(x = LSAS, y = react_Parietal_Avg_AAC_R)) + # Make a plot
+Fig2 <- ggplot(data, aes(x = pep.react, y = react_Parietal_Avg_AAC_R)) + # Make a plot
   geom_point(shape = 1, size = 2, stroke = 1.5) + # Add large hollow scatter point
   geom_smooth(method = lm, colour = "black", size = 1.5) + # Add a thick black regression line
-  labs(title="Reactivity of parietal AAC vs. Trait anxiety", # Add a title, axis labels, and a subtitle
-       y = "Parietal AAC reactivity (corr.)", x = "Trait social anxiety",
+  labs(title="Reactivity of parietal AAC vs. PEP", # Add a title, axis labels, and a subtitle
+       y = "Parietal AAC reactivity (corr.)", x = "PEP reactivity (ms)",
        subtitle = "b)", 
        caption = bquote(italic("r =") ~ .(corr) ) ) + # Show correlation coefficient in caption
   theme_classic() + # Remove background and gridlines
@@ -5265,16 +5383,16 @@ Fig2 <- ggplot(data, aes(x = LSAS, y = react_Parietal_Avg_AAC_R)) + # Make a plo
 print(Fig2)
 
 
-## Figure 3: react_Parietal_Avg_AAC_R with pep.react
+## Figure 3: react_Parietal_Avg_AAC_R with LSAS
 corr <- micombine.cor(mi.res = SET_CFC.outl.del.imp, variables =  # Calculate spearman correlation
-                        c("pep.react", "react_Parietal_Avg_AAC_R"))
+                        c("LSAS", "react_Parietal_Avg_AAC_R"))
 corr <- corr[1, "r"] %>% round(2) # Extract correlation coefficient and round
 data <- mice::complete(SET_CFC.outl.del.imp, m) # # Select a imputed dataset for illustration purposes
-Fig3 <- ggplot(data, aes(x = pep.react, y = react_Parietal_Avg_AAC_R)) + # Make a plot
+Fig3 <- ggplot(data, aes(x = LSAS, y = react_Parietal_Avg_AAC_R)) + # Make a plot
   geom_point(shape = 1, size = 2, stroke = 1.5) + # Add large hollow scatter point
   geom_smooth(method = lm, colour = "black", size = 1.5) + # Add a thick black regression line
-  labs(title="Reactivity of parietal AAC vs. PEP", # Add a title, axis labels, and a subtitle
-       y = "Parietal AAC reactivity (corr.)", x = "PEP reactivity (ms)",
+  labs(title="Reactivity of parietal AAC vs. Trait anxiety", # Add a title, axis labels, and a subtitle
+       y = "Parietal AAC reactivity (corr.)", x = "Trait social anxiety",
        subtitle = "c)", 
        caption = bquote(italic("r =") ~ .(corr) ) ) + # Show correlation coefficient in caption
   theme_classic() + # Remove background and gridlines
@@ -5286,6 +5404,7 @@ Fig3 <- ggplot(data, aes(x = pep.react, y = react_Parietal_Avg_AAC_R)) + # Make 
     plot.caption = element_text(size = 15, hjust = 0) # Increase size of subcaption and place left
   )
 print(Fig3)
+
 
 # Arrange plots side-by-side
 grid.arrange(Fig1, Fig2, Fig3, nrow = 1)
